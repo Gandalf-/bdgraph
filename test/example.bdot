@@ -1,0 +1,25 @@
+1: buy more cream cheese
+2: eat a bagel
+3: some, but not a lot
+4: very little
+5: not much
+
+6: something simple
+7: do something that is very long and complex, so that we know if it has a module that is rubbish
+8: read that book with a title
+
+9: @Watch a silly movie
+10:Eat some cheese
+11: short butalsoverylongandquiteobnoxiousjesushowlongdoesthisneedtobe
+12: short butalsoverylongandquite
+
+options
+  color_complete
+  color_next
+  color_urgent
+
+dependencies
+2,3,4,5,6 -> 1
+9,10 -> 1
+4,5 -> 6
+7,8,9 -> 6
