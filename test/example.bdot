@@ -1,17 +1,17 @@
-3: some, but not a lot
-4: very little
-5: not much
-1: buy more cream cheese
-2: eat a bagel
+  1:  some, but not a lot
+  2:  very little
+  3:  not much
+  4:  buy more cream cheese
+  5:  eat a bagel
 
-8: read that book with a title
-6: something simple
-7: do something that is very long and complex, so that we know if it has a module that is rubbish
+  6:  read that book with a title
+  7:  something simple
+  8:  do something that is very long and complex, so that we know if it has a module that is rubbish
 
-11: short butalsoverylongandquiteobnoxiousjesushowlongdoesthisneedtobe
-9: @Watch a silly movie
-10:Eat some cheese
-12: short butalsoverylongandquite
+  9:  short butalsoverylongandquiteobnoxiousjesushowlongdoesthisneedtobe
+ 10: @Watch a silly movie
+ 11:  Eat some cheese
+ 12:  short butalsoverylongandquite
 
 options
   color_complete
@@ -20,7 +20,5 @@ options
   cleanup
 
 dependencies
-2,3,4,5,6 -> 1
-9,10 -> 1
-4,5 -> 6
-7,8,9 -> 6
+  5,1,2,3,7,10,11 -> 4
+  2,3,8,6,10 -> 7
