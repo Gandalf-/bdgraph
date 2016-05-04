@@ -21,7 +21,7 @@ Works with
     Output: dot format file
 '''
 
-import sys, getopt
+import sys, getopt, copy
 
 # globals
 nice_line_length = 25
@@ -29,14 +29,16 @@ nice_line_length = 25
 ''' string : Node '''
 node_dict = {}
 
+node_order = []
+
 ''' string '''
 key_list = []
 
 ''' char : list of strings '''
 special_chars = {
-        '@' : ['completed', ' [color="green"];'],
-        '!' : ['urgent',' [color="red"];'],
-        '_' : ['no_deps', '[color="0.499 0.386 1.000"];'] }
+        '@' : ['color_complete', ' [color="green"];'],
+        '!' : ['color_urgent',' [color="red"];'],
+        '_' : ['color_next', '[color="0.499 0.386 1.000"];'] }
 
 ''' string '''
 options = []
@@ -55,6 +57,7 @@ class Node:
 
     def __init__(self, name):
         self._name = name
+        self._orig_name = name
         self._children = []
         self._prepped = False
         self._action = ['', '']
@@ -69,6 +72,9 @@ class Node:
     def name(self): return self._name
     @name.setter
     def name(self, value): self._name = value
+
+    @property
+    def orig_name(self): return self._orig_name
 
     @property
     def action(self): 
@@ -152,11 +158,17 @@ def parse_options(line):
         color_urget
     '''
     if line.lower() == 'color_next':
-        options.append('no_deps')
+        options.append('color_next')
+
     elif line.lower() == 'color_complete':
-        options.append('completed')
-    elif line.lower() == 'color_urget':
-        options.append('urgent')
+        options.append('color_complete')
+
+    elif line.lower() == 'color_urgent':
+        options.append('color_urgent')
+
+    elif line.lower() == 'cleanup':
+        options.append('cleanup')
+
     return
 
 def parse_dependencies(line, output):
@@ -211,6 +223,9 @@ def main(argv):
         output.write("ratio = fill;\n")
         output.write("node [style=filled];\n")
 
+        line_num = 0
+        elem_num = 1
+
         for line in content:
             line = clean_str(line)
 
@@ -231,10 +246,19 @@ def main(argv):
                     left = clean_str(parts[0])
                     right = Node(clean_str(parts[1]))
 
+                    node_order.append([line_num, elem_num, left, right])
+                    elem_num = elem_num + 1
+
                     if left not in key_list:
                         key_list.append(left)
 
                     node_dict[left] = right
+
+                # keep track of extra line breaks for cleanup
+                else:
+                    node_order.append([line_num, -1, '', ''])
+
+                line_num = line_num +1
 
             elif found_options: parse_options(line)
 
@@ -262,6 +286,55 @@ def main(argv):
             output.write('"' + tmp_node.name + '"' + tmp_node.action + '\n')
 
         output.write("}\n")
+    
+        # clean up the input file?
+        if 'cleanup' in options:
+            ordered_elems = sorted(node_order, key=lambda x: int(x[0]))
+
+            with open("rewrite.bdot", 'w') as output:
+                for e in ordered_elems:
+                    if e[1] != -1:
+                        output.write(format(e[1], " 3d") + ':  ' + e[3].orig_name + '\n')
+                    else:
+                        output.write("\n")
+
+                output.write("options\n")
+                for e in options:
+                    output.write("  " + e + "\n")
+
+                # filter out newlines
+                ordered_elems[:] = filter(lambda x : x[1] != -1, ordered_elems)
+                ordered_copy = copy.deepcopy(ordered_elems)
+
+                output.write("\ndependencies\n")
+
+                # for each element
+                for e in ordered_elems:
+
+                    # if it has children
+                    if e[3].children:
+                        child_count = 0
+                        num_children = len(e[3].children)
+                        output.write("  ")
+
+                        # for each child
+                        for child in e[3].children:
+                            number = " "
+
+                            # find the child in the ordered list
+                            for elem in ordered_copy:
+
+                                if elem[3].orig_name == child.orig_name:
+                                    number = str(elem[1])
+
+                            if child_count < num_children -1:
+                                output.write(number + ",")
+                                child_count = child_count +1
+
+                            else:
+                                output.write(number + " -> ")
+
+                        output.write(str(e[1]) + "\n")
 
     return
 

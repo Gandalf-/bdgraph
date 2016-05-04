@@ -1,0 +1,9 @@
+3 : Get out of bed
+2 : Put on socks
+1 : Put on shoes
+
+options
+cleanup
+
+dependencies
+3, 2 -> 1
