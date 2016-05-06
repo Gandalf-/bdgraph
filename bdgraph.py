@@ -308,7 +308,7 @@ def main(argv):
                 all_deps_met = True
 
                 for child in tmp_node.children:
-                    if 'completed' not in child.action_type:
+                    if 'color_complete' not in child.action_type:
                         all_deps_met = False
 
                 if all_deps_met:

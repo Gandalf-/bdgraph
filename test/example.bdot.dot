@@ -2,32 +2,22 @@ digraph g{
 rankdir=LR;
 ratio = fill;
 node [style=filled];
-"eat a\n bagel" -> "buy more\n cream cheese"
-"some, but\n not a lot" -> "buy more\n cream cheese"
-"very\n little" -> "buy more\n cream cheese"
-"not\n much" -> "buy more\n cream cheese"
-"something\n simple" -> "buy more\n cream cheese"
-"Watch a\n silly movie" -> "buy more\n cream cheese"
-"Eat some\n cheese" -> "buy more\n cream cheese"
-"buy more\n cream cheese" -> "Run to the\n store"
-"do a 100\n pushups" -> "Run to the\n store"
-"very\n little" -> "something\n simple"
-"not\n much" -> "something\n simple"
-"do something that is very long\n and complex, so that we know\n if it has a module that is rubbish" -> "something\n simple"
-"read that book\n with a title" -> "something\n simple"
-"Watch a\n silly movie" -> "something\n simple"
-"some, but\n not a lot"[color="0.499 0.386 1.000"];
-"very\n little"[color="0.499 0.386 1.000"];
-"not\n much"[color="0.499 0.386 1.000"];
-"buy more\n cream cheese"
-"Run to the\n store"
-"eat a\n bagel"[color="0.499 0.386 1.000"];
-"do a 100\n pushups"[color="0.499 0.386 1.000"];
-"read that book\n with a title"[color="0.499 0.386 1.000"];
-"something\n simple"
-"do something that is very long\n and complex, so that we know\n if it has a module that is rubbish"[color="0.499 0.386 1.000"];
-"short\n butalsoverylongandquiteobnoxiousjesushowlongdoesthisneedtobe"[color="0.499 0.386 1.000"];
-"Watch a\n silly movie" [color="green"];
-"Eat some\n cheese"[color="0.499 0.386 1.000"];
-"short\n butalsoverylongandquite"[color="0.499 0.386 1.000"];
+"Chop up\n the log" -> "Make\n kindling"
+"Buy\n matches" -> "Make a\n fire"
+"Make\n kindling" -> "Make a\n fire"
+"Find a\n fallen log" -> "Chop up\n the log"
+"Find\n an ax" -> "Chop up\n the log"
+"Go to the\n store" -> "Buy\n ingredients"
+"Go to the\n store" -> "Buy\n matches"
+"Buy\n ingredients" -> "Make\n smores!"
+"Make a\n fire" -> "Make\n smores!"
+"Find a\n fallen log"[color="0.499 0.386 1.000"];
+"Find\n an ax"[color="0.499 0.386 1.000"];
+"Chop up\n the log"
+"Make\n kindling"
+"Make a\n fire"
+"Go to the\n store" [color="green"];
+"Buy\n ingredients"[color="0.499 0.386 1.000"];
+"Buy\n matches"[color="0.499 0.386 1.000"];
+"Make\n smores!"
 }

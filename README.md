@@ -3,19 +3,36 @@ bdgraph is a tool for converting simply formatted files into handy graphviz dot 
 It's great for managing complicated projects where steps have multiple dependencies on
 each other!
 
+![Alt text](test/example1.png)
+
+## Options
+bdgraph has several *optional* options that you can enable by adding them to the options
+section of your input file. Really, the whole options section is optional itself!
+- color_complete: highlight nodes marked with '@' in gren
+- color_urgent: highlight nodes marked with '!' in red
+- color_next: highlight nodes that don't have any unmet dependencies in blue
+- clean_up: tells bdgraph to reorganize your input file. It'll reorder the node labels
+  so they're in order, but maintain your extra line breaks so you can keep nodes grouped
+  together.
+
+## Dependencies
+The dependencies section tells bdgraph how your information is related. It uses a simple
+syntax in which '1 -> 2' means '2' relies on '1'. What this means is up to you! I've
+used it for relating references in papers and for to-do lists.
+
 ## Here's an example!
 ```
-1 : Find a fallen log
-2 : Find an ax
-3 : Chop up the log
-8 : Make kindling
-10 : Make a fire
+1 :  Find a fallen log
+2 :  Find an ax
+3 :  Chop up the log
+8 :  Make kindling
+6 :  Make a fire
 
-5 : Go to the store
-4 : Buy ingredients
-7 : Buy matches
+5 : @Go to the store
+4 :  Buy ingredients
+7 :  Buy matches
 
-9 : Make smores!
+9 :  Make smores!
 
 Options
 	color_next
@@ -23,13 +40,13 @@ Options
 
 Dependencies
 	3 -> 8
-	7,8 -> 10
+	7,8 -> 6
 	1,2 -> 3
 	5 -> 4
 	5 -> 7
-	4,10 -> 9
+	4,6 -> 9
 ```
-### Which creates the following:
+### bdgraph uses this to generate the following. Which you can then paste or open in a dot file viewer to get the nice image at the top!
 ```
 digraph g{
 	rankdir=LR;
@@ -55,19 +72,3 @@ digraph g{
 	"Make\n smores!"
 }
 ```
-### What a mess! But now you can paste into a dot file viewer to get:
-
-![Alt text](test/example1.png)
-
-## Options
-bdgraph has several *optional* options that you can enable by adding them to the options
-section of your input file. Really, the whole options section is optional itself!
-- color_complete: highlight nodes marked with '@' in gren
-
-- color_urgent: highlight nodes marked with '!' in red
-
-- color_next: highlight nodes that don't have any unmet dependencies in blue
-
-- clean_up: tells bdgraph to reorganize your input file. It'll reorder the node labels
-  so they're in order, but maintain your extra line breaks so you can keep nodes grouped
-  together.

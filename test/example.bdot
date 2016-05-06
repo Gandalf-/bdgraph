@@ -1,27 +1,23 @@
-  1:  some, but not a lot
-  2:  very little
-  3:  not much
-  4:  buy more cream cheese
-  5:  Run to the store
-  6:  eat a bagel
-  7:  do a 100 pushups
+1 :  Find a fallen log
+2 :  Find an ax
+3 :  Chop up the log
+8 :  Make kindling
+6 :  Make a fire
 
-  8:  read that book with a title
-  9:  something simple
- 10:  do something that is very long and complex, so that we know if it has a module that is rubbish
+5 : @Go to the store
+4 :  Buy ingredients
+7 :  Buy matches
 
- 11:  short butalsoverylongandquiteobnoxiousjesushowlongdoesthisneedtobe
- 12: @Watch a silly movie
- 13:  Eat some cheese
- 14:  short butalsoverylongandquite
+9 :  Make smores!
 
-options
-  color_complete
+Options
   color_next
-  color_urgent
-  cleanup
+  color_complete
 
-dependencies
-  6,1,2,3,9,12,13 -> 4
-  4,7 -> 5
-  2,3,10,8,12 -> 9
+Dependencies
+  3 -> 8
+  7,8 -> 6
+  1,2 -> 3
+  5 -> 4
+  5 -> 7
+  4,6 -> 9
