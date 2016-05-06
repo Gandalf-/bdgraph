@@ -1,23 +1,23 @@
 digraph g{
-rankdir=LR;
-ratio = fill;
-node [style=filled];
-"Chop up\n the log" -> "Make\n kindling"
-"Buy\n matches" -> "Make a\n fire"
-"Make\n kindling" -> "Make a\n fire"
-"Find a\n fallen log" -> "Chop up\n the log"
-"Find\n an ax" -> "Chop up\n the log"
-"Go to the\n store" -> "Buy\n ingredients"
-"Go to the\n store" -> "Buy\n matches"
-"Buy\n ingredients" -> "Make\n smores!"
-"Make a\n fire" -> "Make\n smores!"
-"Find a\n fallen log"[color="0.499 0.386 1.000"];
-"Find\n an ax"[color="0.499 0.386 1.000"];
-"Chop up\n the log"
-"Make\n kindling"
-"Make a\n fire"
-"Go to the\n store" [color="green"];
-"Buy\n ingredients"[color="0.499 0.386 1.000"];
-"Buy\n matches"[color="0.499 0.386 1.000"];
-"Make\n smores!"
+    rankdir=LR;
+    ratio = fill;
+    node [style=filled];
+    "Chop up\n the log" -> "Make\n kindling"
+    "Buy\n matches" -> "Make a\n fire"
+    "Make\n kindling" -> "Make a\n fire"
+    "Find a\n fallen log" -> "Chop up\n the log"
+    "Find\n an ax" -> "Chop up\n the log"
+    "Go to the\n store" -> "Buy\n ingredients"
+    "Go to the\n store" -> "Buy\n matches"
+    "Buy\n ingredients" -> "Make\n smores!"
+    "Make a\n fire" -> "Make\n smores!"
+    "Find a\n fallen log"[color="0.499 0.386 1.000"];
+    "Find\n an ax"[color="0.499 0.386 1.000"];
+    "Chop up\n the log"
+    "Make\n kindling"
+    "Make a\n fire"
+    "Go to the\n store" [color="green"];
+    "Buy\n ingredients"[color="0.499 0.386 1.000"];
+    "Buy\n matches"[color="0.499 0.386 1.000"];
+    "Make\n smores!"
 }

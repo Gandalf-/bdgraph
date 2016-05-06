@@ -21,34 +21,35 @@ used it for relating references in papers and for to-do lists. Identation and sp
 are entirely optional.
 
 ### Here's an example!
-example.bdot
 ```
-1 :  Find a fallen log
-2 :  Find an ax
-3 :  Chop up the log
-8 :  Make kindling
-6 :  Make a fire
+1:  Find a fallen log
+2:  Find an ax
+3:  Chop up the log
+4:  Make kindling
+5:  Make a fire
 
-5 : @Go to the store
-4 :  Buy ingredients
-7 :  Buy matches
+6: @Go to the store
+7:  Buy ingredients
+8:  Buy matches
 
-9 :  Make smores!
+9:  Make smores!
 
-Options
-	color_next
-	color_complete
+options
+  color_next
+  color_complete
 
-Dependencies
-	3 -> 8
-	7,8 -> 6
-	1,2 -> 3
-	5 -> 4
-	5 -> 7
-	4,6 -> 9
+dependencies
+  1,2 -> 3
+  3 -> 4
+
+  8,4 -> 5
+  6 -> 7
+  6 -> 8
+
+  7,5 -> 9
 ```
-### bdgraph uses this to generate the following. Which you can then paste or open in a dot file viewer to get the nice image at the top!
-out.dot
+### bdgraph uses this to generate the following:
+Which you can then paste or open in any dot file viewer to get the nice image at the top!
 ```
 digraph g{
 	rankdir=LR;
