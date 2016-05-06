@@ -3,7 +3,7 @@
 python bdgraph.py input_file [output_file]
 '''
 
-import sys, getopt, copy
+import sys, getopt, copy, os
 
 # GLOBALS
 nice_line_length = 25
@@ -202,7 +202,7 @@ def parse_options(line):
 
     return
 
-def parse_dependencies(line, output):
+def parse_dependencies(line, output, line_num):
     ''' string -> none
     prints the required output for lines of the form
         1 -> 2
@@ -224,6 +224,11 @@ def parse_dependencies(line, output):
 
             file_write(output, '    "' + left_node.name + '" -> "' + 
                        right_node.name + '"' + right_node.action + '\n')
+
+    elif parts[0].lower() not in ["", "dependencies"]:
+        print('ignoring unknown syntax on line: '+ 
+                str(line_num +1) + ', "' + parts[0] + '"')
+
     return
 
 # MAIN
@@ -238,6 +243,10 @@ def main(argv):
     # parse args
     if len(argv) > 0:
         fname = str(argv[0])
+
+        if not os.path.exists(fname):
+            print('error: file "' + fname + '" does not exist')
+            sys.exit(1)
     else:
         print('python bdgraph.py input_file [output_file]')
         sys.exit(1)
@@ -247,7 +256,14 @@ def main(argv):
         content = [elem.strip('\n') for elem in f.readlines()]
 
     # optional output file name
-    oname = str(argv[1]) if len(argv) > 1 else fname + ".dot"
+    if len(argv) > 1:
+        oname = str(argv[1])
+
+        if not os.path.exists(oname):
+            print('error: file "' + oname + '" does not exist')
+            sys.exit(1)
+    else:
+        oname = fname + ".dot"
 
     # parse input and write output
     with open(oname, 'w') as output:
@@ -287,18 +303,24 @@ def main(argv):
 
                     node_dict[left] = right
 
+                # try to catch syntax errors
+                elif parts[0].lower() not in ["", "options"]:
+                    print("ignoring unknown syntax on line: "+ 
+                            str(line_num +1)+ ', "' + parts[0] + '"')
+
                 # keep track of extra line breaks so we can reconstruct 
                 # them in cleanup mode
                 else:
                     node_list.append([line_num, -1, '', ''])
 
-                line_num = line_num +1
 
             elif found_options: 
                 parse_options(line)
 
             elif found_deps: 
-                parse_dependencies(line, output)
+                parse_dependencies(line, output, line_num)
+
+            line_num = line_num +1
 
         # decorate nodes without unmet dependencies
         for key in key_list:
