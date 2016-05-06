@@ -5,7 +5,8 @@ each other!
 
 ![Alt text](test/example1.png)
 
-## Options bdgraph has several *optional* options that you can enable by adding them to the options section of your input file. Really, the whole options section is optional itself!
+## Options 
+bdgraph has several *optional* options that you can enable by adding them to the options section of your input file. Really, the whole options section is optional itself!
 - **color_complete**: highlight nodes marked with '@' in gren
 - **color_urgent**: highlight nodes marked with '!' in red
 - **color_next**: highlight nodes that don't have any unmet dependencies in blue
@@ -19,7 +20,8 @@ syntax in which '1 -> 2' means '2' relies on '1'. What this means is up to you! 
 used it for relating references in papers and for to-do lists. Identation and spacing
 are entirely optional.
 
-## Here's an example!
+### Here's an example!
+example.bdot
 ```
 1 :  Find a fallen log
 2 :  Find an ax
@@ -46,6 +48,7 @@ Dependencies
 	4,6 -> 9
 ```
 ### bdgraph uses this to generate the following. Which you can then paste or open in a dot file viewer to get the nice image at the top!
+out.dot
 ```
 digraph g{
 	rankdir=LR;
