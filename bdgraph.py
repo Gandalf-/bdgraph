@@ -222,7 +222,7 @@ def parse_dependencies(line, output):
             left_node = get_and_prep_elem(clean_str(elem) )
             right_node.add_child(left_node)
 
-            file_write(output, '"' + left_node.name + '" -> "' + 
+            file_write(output, '    "' + left_node.name + '" -> "' + 
                        right_node.name + '"' + right_node.action + '\n')
     return
 
@@ -252,9 +252,9 @@ def main(argv):
     # parse input and write output
     with open(oname, 'w') as output:
         file_write(output, "digraph g{\n")
-        file_write(output, "rankdir=LR;\n")
-        file_write(output, "ratio = fill;\n")
-        file_write(output, "node [style=filled];\n")
+        file_write(output, "    rankdir=LR;\n")
+        file_write(output, "    ratio = fill;\n")
+        file_write(output, "    node [style=filled];\n")
 
         line_num = 0
         elem_num = 1
@@ -319,7 +319,7 @@ def main(argv):
         # repeated, but that's by design
         for key in key_list:
             tmp_node = get_and_prep_elem(key)
-            file_write(output, '"' + tmp_node.name + '"' + tmp_node.action + '\n')
+            file_write(output, '    "' + tmp_node.name + '"' + tmp_node.action + '\n')
 
         file_write(output, "}\n")
     

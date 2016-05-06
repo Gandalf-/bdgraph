@@ -5,20 +5,19 @@ each other!
 
 ![Alt text](test/example1.png)
 
-## Options
-bdgraph has several *optional* options that you can enable by adding them to the options
-section of your input file. Really, the whole options section is optional itself!
-- color_complete: highlight nodes marked with '@' in gren
-- color_urgent: highlight nodes marked with '!' in red
-- color_next: highlight nodes that don't have any unmet dependencies in blue
-- clean_up: tells bdgraph to reorganize your input file. It'll reorder the node labels
-  so they're in order, but maintain your extra line breaks so you can keep nodes grouped
-  together.
+## Options bdgraph has several *optional* options that you can enable by adding them to the options section of your input file. Really, the whole options section is optional itself!
+- **color_complete**: highlight nodes marked with '@' in gren
+- **color_urgent**: highlight nodes marked with '!' in red
+- **color_next**: highlight nodes that don't have any unmet dependencies in blue
+- **cleanup**: tells bdgraph to reorganize your input file. It'll reorder the node
+  labels so they're in order, but maintain the node values themselves and your extra
+  line breaks so you can keep nodes grouped together.
 
 ## Dependencies
 The dependencies section tells bdgraph how your information is related. It uses a simple
 syntax in which '1 -> 2' means '2' relies on '1'. What this means is up to you! I've
-used it for relating references in papers and for to-do lists.
+used it for relating references in papers and for to-do lists. Identation and spacing
+are entirely optional.
 
 ## Here's an example!
 ```
