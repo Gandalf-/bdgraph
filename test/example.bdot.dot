@@ -9,6 +9,8 @@ node [style=filled];
 "something\n simple" -> "buy more\n cream cheese"
 "Watch a\n silly movie" -> "buy more\n cream cheese"
 "Eat some\n cheese" -> "buy more\n cream cheese"
+"buy more\n cream cheese" -> "Run to the\n store"
+"do a 100\n pushups" -> "Run to the\n store"
 "very\n little" -> "something\n simple"
 "not\n much" -> "something\n simple"
 "do something that is very long\n and complex, so that we know\n if it has a module that is rubbish" -> "something\n simple"
@@ -18,7 +20,9 @@ node [style=filled];
 "very\n little"[color="0.499 0.386 1.000"];
 "not\n much"[color="0.499 0.386 1.000"];
 "buy more\n cream cheese"
+"Run to the\n store"
 "eat a\n bagel"[color="0.499 0.386 1.000"];
+"do a 100\n pushups"[color="0.499 0.386 1.000"];
 "read that book\n with a title"[color="0.499 0.386 1.000"];
 "something\n simple"
 "do something that is very long\n and complex, so that we know\n if it has a module that is rubbish"[color="0.499 0.386 1.000"];

@@ -1,73 +1,46 @@
 #!/usr/bin/python3
 ''' bdgraph.py
-Works with 
-    http://www.webgraphviz.com/
-    xdot
-
-    Input file format:
-        1 :  Put on socks
-        2 : !Put on shoes
-        3 : @Go to work
-
-        Options
-            color_next
-            color_complete
-            color_urget
-
-        Dependencies
-            1 -> 2
-            1,2 -> 3
-
-    Output: dot format file
+python bdgraph.py input_file [output_file]
 '''
 
 import sys, getopt, copy
 
-# globals
+# GLOBALS
 nice_line_length = 25
 no_output = False
 
-''' string : Node '''
+node_list = []
 node_dict = {}
 
-node_order = []
-
-''' string '''
 key_list = []
 
-''' char : list of strings '''
-special_chars = {
-        '@' : ['color_complete', ' [color="green"];'],
-        '!' : ['color_urgent',' [color="red"];'],
-        '_' : ['color_next', '[color="0.499 0.386 1.000"];'] }
+available_options = [
+    'color_complete', 'color_urgent', 'color_next', 'cleanup'
+    ]
+options_list = []
+options_dict = {
+    '@' : ['color_complete', ' [color="green"];'],
+    '!' : ['color_urgent',' [color="red"];'],
+    '_' : ['color_next', '[color="0.499 0.386 1.000"];'] 
+    }
 
-''' string '''
-options = []
 
-
-# helpers
+# HELPERS
 ''' string -> string'''
 clean_str = lambda elm : str(elm).strip()
 
 ''' string -> string'''
-cleanup = lambda tok : tok[1:].strip() if tok[0] in special_chars else tok
+cleanup = lambda tok : tok[1:].strip() if tok[0] in options_dict else tok
 
 
-# classes
+# CLASSES
 class Node:
-
     def __init__(self, name):
         self._name = name
         self._orig_name = name
         self._children = []
         self._prepped = False
         self._action = ['', '']
-        self._properties = []
-
-    @property
-    def prepped(self): return self._prepped
-    @prepped.setter
-    def prepped(self, value): self._prepped = value
 
     @property
     def name(self): return self._name
@@ -78,25 +51,30 @@ class Node:
     def orig_name(self): return self._orig_name
 
     @property
+    def children(self): return self._children
+
+    def add_child(self, child):
+        self._children.append(child)
+
+    @property
+    def prepped(self): return self._prepped
+    @prepped.setter
+    def prepped(self, value): self._prepped = value
+
+    @property
     def action(self): 
-        return self._action[1] if self._action[0] in options else ''
+        return self._action[1] if self._action[0] in options_list else ''
     @property
     def action_type(self): return self._action[0]
     @action.setter
     def action(self, value): self._action = value
 
     def set_action(self):
-        if self._name[0] in special_chars: 
-            self._action = special_chars[self._name[0]]
-
-    @property
-    def children(self): return self._children
-
-    def add_child(self, child):
-        self._children.append(child)
+        if self._name[0] in options_dict: 
+            self._action = options_dict[self._name[0]]
 
 
-# functions
+# FUNCTIONS
 def split_on_nearest_space(word, start):
     ''' string, int -> string
     searches left and right of the start point for a space
@@ -126,57 +104,59 @@ def file_write(output, string):
     return
 
 def cleanup_input(ordered_node, filename):
-    ordered_elems = sorted(node_order, key=lambda x: int(x[0]))
+    ''' list of nodes, string -> none
+    '''
+    ordered_elems = sorted(node_list, key=lambda x: int(x[0]))
 
     with open(filename, 'w') as output:
-        for e in ordered_elems:
-            if e[1] != -1:
-                output.write(format(e[1], " 3d"))
+        for elem in ordered_elems:
+            if elem[1] != -1:
+                output.write(format(elem[1], " 3d"))
 
-                if e[3].orig_name[0] in special_chars:
-                    output.write(': ' + e[3].orig_name + '\n')
+                if elem[3].orig_name[0] in options_dict:
+                    output.write(': ' + elem[3].orig_name + '\n')
                 else:
-                    output.write(':  ' + e[3].orig_name + '\n')
+                    output.write(':  ' + elem[3].orig_name + '\n')
             else:
                 output.write("\n")
 
         output.write("options\n")
-        for e in options:
-            output.write("  " + e + "\n")
+        for option in options_list:
+            output.write("  " + option + "\n")
 
-        # filter out newlines
+        # filter out newlines and make a copy for nested iteration
         ordered_elems[:] = filter(lambda x : x[1] != -1, ordered_elems)
         ordered_copy = copy.deepcopy(ordered_elems)
 
         output.write("\ndependencies\n")
 
-        # for each element
-        for e in ordered_elems:
+        # for each node element
+        for outer_elem in ordered_elems:
 
             # if it has children
-            if e[3].children:
+            if outer_elem[3].children:
                 child_count = 0
-                num_children = len(e[3].children)
+                num_children = len(outer_elem[3].children)
                 output.write("  ")
 
                 # for each child
-                for child in e[3].children:
-                    number = " "
+                for child in outer_elem[3].children:
+                    key = " "
 
                     # find the child in the ordered list
-                    for elem in ordered_copy:
+                    for inner_elem in ordered_copy:
 
-                        if elem[3].orig_name == child.orig_name:
-                            number = str(elem[1])
+                        if inner_elem[3].orig_name == child.orig_name:
+                            key = str(inner_elem[1])
 
                     if child_count < num_children -1:
-                        output.write(number + ",")
+                        output.write(key + ",")
                         child_count = child_count +1
 
                     else:
-                        output.write(number + " -> ")
+                        output.write(key + " -> ")
 
-                output.write(str(e[1]) + "\n")
+                output.write(str(outer_elem[1]) + "\n")
     return
 
 def get_and_prep_elem(key):
@@ -184,7 +164,6 @@ def get_and_prep_elem(key):
     retrieves elements from the node_dict dictionary and inserts
     newline characters to make them look nicer
     '''
-
     node = node_dict[clean_str(key)]
 
     if not node.prepped: 
@@ -193,11 +172,11 @@ def get_and_prep_elem(key):
         length = len(token)
         half = length // 2
 
-        # split in half
+        # split in half if shortish
         if length < 2 * nice_line_length:
             token = split_on_nearest_space(token, half)
 
-        # split it in thirds
+        # split it in thirds if longish
         else:
             first_third = length // 3
             second_third = 2 * (length // 3)
@@ -205,7 +184,7 @@ def get_and_prep_elem(key):
             token = split_on_nearest_space(token, first_third)
             token = split_on_nearest_space(token, second_third)
 
-        #node.action = get_action(node.name)
+        # update the node
         node.set_action()
         node.name = cleanup(token)
         node.prepped = True
@@ -215,21 +194,11 @@ def get_and_prep_elem(key):
 def parse_options(line):
     ''' string -> none
     sets which actions are allowed
-        color_next
-        color_complete
-        color_urget
     '''
-    if line.lower() == 'color_next':
-        options.append('color_next')
+    option = clean_str(line.lower())
 
-    elif line.lower() == 'color_complete':
-        options.append('color_complete')
-
-    elif line.lower() == 'color_urgent':
-        options.append('color_urgent')
-
-    elif line.lower() == 'cleanup':
-        options.append('cleanup')
+    if option in available_options:
+        options_list.append(option)
 
     return
 
@@ -240,11 +209,12 @@ def parse_dependencies(line, output):
         1,2,3,4 -> 5
     '''
     parts = line.split('->', 1)
-    if len(parts) > 1:
 
+    if len(parts) > 1:
         # get the right side once
         right_node = get_and_prep_elem(clean_str(parts[1]) )
 
+        # for each left side
         # supports 1,2,3 -> 4
         for elem in parts[0].split(','):
 
@@ -253,15 +223,14 @@ def parse_dependencies(line, output):
             right_node.add_child(left_node)
 
             file_write(output, '"' + left_node.name + '" -> "' + 
-                         right_node.name + '"' + right_node.action + '\n')
+                       right_node.name + '"' + right_node.action + '\n')
     return
 
-# main
+# MAIN
 def main(argv):
     ''' list -> none
     handles IO
     '''
-
     fname,oname = '', ''
     found_deps = False
     found_options = False
@@ -277,12 +246,10 @@ def main(argv):
     with open(fname, 'r') as f:
         content = [elem.strip('\n') for elem in f.readlines()]
 
-    if len(argv) > 1:
-        oname = str(argv[1])
-    else:
-        oname = fname + ".dot"
+    # optional output file name
+    oname = str(argv[1]) if len(argv) > 1 else fname + ".dot"
 
-    # write output
+    # parse input and write output
     with open(oname, 'w') as output:
         file_write(output, "digraph g{\n")
         file_write(output, "rankdir=LR;\n")
@@ -312,7 +279,7 @@ def main(argv):
                     left = clean_str(parts[0])
                     right = Node(clean_str(parts[1]))
 
-                    node_order.append([line_num, elem_num, left, right])
+                    node_list.append([line_num, elem_num, left, right])
                     elem_num = elem_num + 1
 
                     if left not in key_list:
@@ -320,15 +287,18 @@ def main(argv):
 
                     node_dict[left] = right
 
-                # keep track of extra line breaks for cleanup
+                # keep track of extra line breaks so we can reconstruct 
+                # them in cleanup mode
                 else:
-                    node_order.append([line_num, -1, '', ''])
+                    node_list.append([line_num, -1, '', ''])
 
                 line_num = line_num +1
 
-            elif found_options: parse_options(line)
+            elif found_options: 
+                parse_options(line)
 
-            elif found_deps: parse_dependencies(line, output)
+            elif found_deps: 
+                parse_dependencies(line, output)
 
         # decorate nodes without unmet dependencies
         for key in key_list:
@@ -342,7 +312,7 @@ def main(argv):
                         all_deps_met = False
 
                 if all_deps_met:
-                    tmp_node.action = special_chars['_']
+                    tmp_node.action = options_dict['_']
 
 
         # write all nodes, nodes with dependencies will be
@@ -353,9 +323,9 @@ def main(argv):
 
         file_write(output, "}\n")
     
-        # clean up the input file?
-        if 'cleanup' in options:
-            cleanup_input(node_order, fname)
+    # clean up the input file?
+    if 'cleanup' in options_list:
+        cleanup_input(node_list, fname)
 
     return
 
