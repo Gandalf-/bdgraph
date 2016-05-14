@@ -8,10 +8,10 @@ import sys, getopt, copy, os
 # GLOBALS
 nice_line_length = 25
 no_output = False
+had_syntax_error = False
 
 node_list = []
 node_dict = {}
-
 key_list = []
 
 available_options = [
@@ -19,7 +19,7 @@ available_options = [
     ]
 options_list = []
 options_dict = {
-    '@' : ['color_complete', ' [color="green"];'],
+    '@' : ['color_complete', ' [color="springgreen"];'],
     '!' : ['color_urgent',' [color="red"];'],
     '_' : ['color_next', '[color="0.499 0.386 1.000"];'] 
     }
@@ -41,37 +41,50 @@ class Node:
         self._children = []
         self._prepped = False
         self._action = ['', '']
+        return
 
     @property
-    def name(self): return self._name
+    def name(self): 
+        return self._name
     @name.setter
-    def name(self, value): self._name = value
+    def name(self, value): 
+        self._name = value
+        return
 
     @property
-    def orig_name(self): return self._orig_name
+    def orig_name(self): 
+        return self._orig_name
 
     @property
-    def children(self): return self._children
+    def children(self): 
+        return self._children
 
     def add_child(self, child):
         self._children.append(child)
+        return
 
     @property
-    def prepped(self): return self._prepped
+    def prepped(self): 
+        return self._prepped
     @prepped.setter
-    def prepped(self, value): self._prepped = value
+    def prepped(self, value): 
+        self._prepped = value
+        return
 
     @property
     def action(self): 
         return self._action[1] if self._action[0] in options_list else ''
     @property
-    def action_type(self): return self._action[0]
+    def action_type(self): 
+        return self._action[0]
     @action.setter
-    def action(self, value): self._action = value
-
+    def action(self, value): 
+        self._action = value
+        return
     def set_action(self):
         if self._name[0] in options_dict: 
             self._action = options_dict[self._name[0]]
+        return
 
 
 # FUNCTIONS
@@ -98,6 +111,7 @@ def split_on_nearest_space(word, start):
 
 def file_write(output, string):
     ''' string, string -> none
+    wrapper for file writing that abides by the no_output flag
     '''
     if not no_output:
         output.write(string)
@@ -105,6 +119,8 @@ def file_write(output, string):
 
 def cleanup_input(ordered_node, filename):
     ''' list of nodes, string -> none
+    reconstructs the input file so that inputs are ordered correctly and
+    intentional spacing is maintained
     '''
     ordered_elems = sorted(node_list, key=lambda x: int(x[0]))
 
@@ -191,6 +207,39 @@ def get_and_prep_elem(key):
 
     return node
 
+def parse_inputs(line, line_num, elem_num):
+    ''' string, int, int -> int
+    builds key_list and node_list structures from each input line
+        1 : Chop wood
+        2 : Buy matches
+    '''
+    parts = line.split(':', 1)
+
+    if len(parts) > 1:
+        left = clean_str(parts[0])
+        right = Node(clean_str(parts[1]))
+
+        node_list.append([line_num, elem_num, left, right])
+        elem_num = elem_num + 1
+
+        if left not in key_list:
+            key_list.append(left)
+
+        node_dict[left] = right
+
+    # try to catch syntax errors
+    elif parts[0].lower() not in ["", "options"]:
+        had_syntax_error = True
+        print("ignoring unknown syntax on line: "+ 
+                str(line_num +1)+ ', "' + parts[0] + '"')
+
+    # keep track of extra line breaks so we can reconstruct 
+    # them in cleanup mode
+    else:
+        node_list.append([line_num, -1, '', ''])
+
+    return elem_num
+
 def parse_options(line):
     ''' string -> none
     sets which actions are allowed
@@ -212,7 +261,12 @@ def parse_dependencies(line, output, line_num):
 
     if len(parts) > 1:
         # get the right side once
-        right_node = get_and_prep_elem(clean_str(parts[1]) )
+        try:
+            right_node = get_and_prep_elem(clean_str(parts[1]) )
+        except KeyError:
+            print('error: unknown dependency "'+clean_str(parts[1]) +
+                    '" on line number: ' + str(line_num) +', "' + line +'"')
+            sys.exit(1)
 
         # for each left side
         # supports 1,2,3 -> 4
@@ -226,6 +280,7 @@ def parse_dependencies(line, output, line_num):
                        right_node.name + '"' + right_node.action + '\n')
 
     elif parts[0].lower() not in ["", "dependencies"]:
+        had_syntax_error = True
         print('ignoring unknown syntax on line: '+ 
                 str(line_num +1) + ', "' + parts[0] + '"')
 
@@ -236,37 +291,33 @@ def main(argv):
     ''' list -> none
     handles IO
     '''
-    fname,oname = '', ''
-    found_deps = False
-    found_options = False
+    input_fn,output_fn = '', ''
+    inputs_done = False
+    options_done = False
 
     # parse args
     if len(argv) > 0:
-        fname = str(argv[0])
+        input_fn = str(argv[0])
 
-        if not os.path.exists(fname):
-            print('error: file "' + fname + '" does not exist')
+        if not os.path.exists(input_fn):
+            print('error: file "' + input_fn + '" does not exist')
             sys.exit(1)
     else:
         print('python bdgraph.py input_file [output_file]')
         sys.exit(1)
 
     # read input
-    with open(fname, 'r') as f:
+    with open(input_fn, 'r') as f:
         content = [elem.strip('\n') for elem in f.readlines()]
 
     # optional output file name
     if len(argv) > 1:
-        oname = str(argv[1])
-
-        if not os.path.exists(oname):
-            print('error: file "' + oname + '" does not exist')
-            sys.exit(1)
+        output_fn = str(argv[1])
     else:
-        oname = fname + ".dot"
+        output_fn = input_fn + ".dot"
 
     # parse input and write output
-    with open(oname, 'w') as output:
+    with open(output_fn, 'w') as output:
         file_write(output, "digraph g{\n")
         file_write(output, "    rankdir=LR;\n")
         file_write(output, "    ratio = fill;\n")
@@ -274,50 +325,24 @@ def main(argv):
 
         line_num = 0
         elem_num = 1
+        had_syntax_error = False
 
         for line in content:
             line = clean_str(line)
 
-            if line.lower() == "dependencies":
-                found_deps = True
-                found_options = False
-
             if line.lower() == "options":
-                found_options = True
-                found_deps = False
+                inputs_done = True
+
+            if line.lower() == "dependencies":
+                options_done = True
             
-            # parse in the bindings
-            # 1 : Put on socks
-            if not found_deps and not found_options:
-                parts = line.split(':', 1)
+            if not inputs_done:
+                elem_num = parse_inputs(line, line_num, elem_num)
 
-                if len(parts) > 1:
-                    left = clean_str(parts[0])
-                    right = Node(clean_str(parts[1]))
-
-                    node_list.append([line_num, elem_num, left, right])
-                    elem_num = elem_num + 1
-
-                    if left not in key_list:
-                        key_list.append(left)
-
-                    node_dict[left] = right
-
-                # try to catch syntax errors
-                elif parts[0].lower() not in ["", "options"]:
-                    print("ignoring unknown syntax on line: "+ 
-                            str(line_num +1)+ ', "' + parts[0] + '"')
-
-                # keep track of extra line breaks so we can reconstruct 
-                # them in cleanup mode
-                else:
-                    node_list.append([line_num, -1, '', ''])
-
-
-            elif found_options: 
+            elif not options_done:
                 parse_options(line)
 
-            elif found_deps: 
+            else:
                 parse_dependencies(line, output, line_num)
 
             line_num = line_num +1
@@ -336,7 +361,6 @@ def main(argv):
                 if all_deps_met:
                     tmp_node.action = options_dict['_']
 
-
         # write all nodes, nodes with dependencies will be
         # repeated, but that's by design
         for key in key_list:
@@ -347,7 +371,10 @@ def main(argv):
     
     # clean up the input file?
     if 'cleanup' in options_list:
-        cleanup_input(node_list, fname)
+        if not had_syntax_error:
+            cleanup_input(node_list, input_fn)
+        else:
+            print("cleanup requested but not performed due to syntax error")
 
     return
 

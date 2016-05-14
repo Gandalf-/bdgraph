@@ -1,11 +1,11 @@
-3 : Get out of bed
-2 : Put on socks
-1 : Put on shoes
-4 : Go to work
+  1: @Get out of bed
+  2:  Put on socks
+  3:  Put on shoes
+  4:  Go to work
 
 options
-cleanup
+  cleanup
 
 dependencies
-3, 2 -> 1
-1 -> 4
+  1,2 -> 3
+  3 -> 4
