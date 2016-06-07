@@ -125,6 +125,8 @@ def cleanup_input(ordered_node, filename):
     ordered_elems = sorted(node_list, key=lambda x: int(x[0]))
 
     with open(filename, 'w') as output:
+        output.write("#!/usr/local/bin/bdgraph")
+
         for elem in ordered_elems:
             if elem[1] != -1:
                 output.write(format(elem[1], " 3d"))
@@ -155,6 +157,8 @@ def cleanup_input(ordered_node, filename):
                 num_children = len(outer_elem[3].children)
                 output.write("  ")
 
+                output.write(str(outer_elem[1]).ljust(2 ,' ') + " <- ")
+
                 # for each child
                 for child in outer_elem[3].children:
                     key = " "
@@ -170,9 +174,7 @@ def cleanup_input(ordered_node, filename):
                         child_count = child_count +1
 
                     else:
-                        output.write(key + " -> ")
-
-                output.write(str(outer_elem[1]) + "\n")
+                        output.write(key + "\n")
     return
 
 def get_and_prep_elem(key):
@@ -228,7 +230,7 @@ def parse_inputs(line, line_num, elem_num):
         node_dict[left] = right
 
     # try to catch syntax errors
-    elif parts[0].lower() not in ["", "options"]:
+    elif parts[0].lower() not in ["", "options", "#!/usr/local/bin/bdgraph"]:
         had_syntax_error = True
         print("ignoring unknown syntax on line: "+ 
                 str(line_num +1)+ ', "' + parts[0] + '"')
@@ -257,20 +259,20 @@ def parse_dependencies(line, output, line_num):
         1 -> 2
         1,2,3,4 -> 5
     '''
-    parts = line.split('->', 1)
+    parts = line.split('<-', 1)
 
     if len(parts) > 1:
-        # get the right side once
+        # get the left side once
         try:
-            right_node = get_and_prep_elem(clean_str(parts[1]) )
+            right_node = get_and_prep_elem(clean_str(parts[0]) )
         except KeyError:
-            print('error: unknown dependency "'+clean_str(parts[1]) +
+            print('error: unknown dependency "'+clean_str(parts[0]) +
                     '" on line number: ' + str(line_num) +', "' + line +'"')
             sys.exit(1)
 
-        # for each left side
-        # supports 1,2,3 -> 4
-        for elem in parts[0].split(','):
+        # for each right side
+        # supports 4 <- 1,2,3
+        for elem in parts[1].split(','):
 
             # get each left hand side 
             left_node = get_and_prep_elem(clean_str(elem) )
@@ -282,8 +284,7 @@ def parse_dependencies(line, output, line_num):
     elif parts[0].lower() not in ["", "dependencies"]:
         had_syntax_error = True
         print('ignoring unknown syntax on line: '+ 
-                str(line_num +1) + ', "' + parts[0] + '"')
-
+                str(line_num +0) + ', "' + parts[0] + '"')
     return
 
 # MAIN
