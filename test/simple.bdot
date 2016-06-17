@@ -13,6 +13,8 @@
   8:  buy a boat
 
 options
+  color_complete
+  color_next
   cleanup
 
 dependencies

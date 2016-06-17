@@ -47,7 +47,7 @@ class Node:
         self._children = []
         self._prepped = False
         self._alt_syntax = False
-        self._action = ['', '']
+        self._action = Action()
         return
 
     @property
@@ -87,18 +87,7 @@ class Node:
 
     @property
     def action(self): 
-        return self._action[1] if self._action[0] in opts_list else ''
-    @property
-    def action_type(self): 
-        return self._action[0]
-    @action.setter
-    def action(self, value): 
-        self._action = value
-        return
-    def set_action(self):
-        if self._name[0] in opt_dict: 
-            self._action = opt_dict[self._name[0]][1]
-        return
+        return self._action
 
 class Decl:
     ''' encapsulates declerations's line, element number, name, and node
@@ -122,6 +111,45 @@ class Decl:
     @property
     def node(self):
         return self._node
+
+class Action:
+    ''' encapsulates option's character, label, and color modifier
+    '''
+    def __init__(self):
+        self._key = ''
+        self._label = ''
+        self._modifier = ''
+
+    @property
+    def key(self):
+        return self._key
+    @property
+    def label(self):
+        return self._label
+    @property
+    def modifier(self):
+        return self._modifier
+
+    def get_modifier(self):
+        if self._label in opts_list:
+            return self._modifier
+        else:
+            return ''
+    def set_action(self, key, overwrite, build):
+        # hand me a line, I'll figure out what to do with it
+        if build:
+            if len(key) > 0 and key[0] in opt_dict:
+                self._key = key[0]
+                self._label = opt_dict[key[0]][0]
+                self._modifier = opt_dict[key[0]][1]
+
+        # you know exactly what we want
+        else:
+            if self._key == '' or overwrite:
+                self._key = key
+                self._label = opt_dict[key][0]
+                self._modifier = opt_dict[key][1]
+        return
 
 
 # FUNCTIONS
@@ -254,7 +282,7 @@ def get_and_prep_elem(key):
             token = split_on_nearest_space(token, second_third)
 
         # update the node
-        node.set_action()
+        node.action.set_action(node.name, True, True)
         node.name = cleanup(token)
         node.prepped = True
 
@@ -332,7 +360,8 @@ def parse_dependencies(line, output, line_num):
             right_node.add_child(left_node)
 
             file_write(output, '    "' + left_node.name + '" -> "' + 
-                       right_node.name + '"' + right_node.action + '\n')
+                       right_node.name + '"' + 
+                       right_node.action.get_modifier() + '\n')
     else:
       parts = line.split('->', 1)
 
@@ -355,7 +384,8 @@ def parse_dependencies(line, output, line_num):
             left_node.alt_syntax = True
 
             file_write(output, '    "' + right_node.name + '" -> "' + 
-                       left_node.name + '"' + left_node.action + '\n')
+                       left_node.name + '"' + 
+                       left_node.action.get_modifier() + '\n')
 
       elif parts[0].lower() not in ['', 'dependencies']:
           had_syntax_error = True
@@ -427,28 +457,28 @@ def main(argv):
         # decorate nodes without unmet dependencies
         for key in key_list:
             tmp_node = get_and_prep_elem(key)
+            all_deps_met = True
 
-            if not tmp_node.action:
-                all_deps_met = True
+            for child in tmp_node.children:
+                if 'color_complete' != child.action.label:
+                    all_deps_met = False
 
-                for child in tmp_node.children:
-                    if 'color_complete' not in child.action_type:
-                        all_deps_met = False
-
-                if all_deps_met:
-                    tmp_node.action = opt_dict['_']
+            if all_deps_met:
+                print("blue: ",tmp_node.name)
+                tmp_node.action.set_action('_', False, False)
 
         # write all nodes, nodes with dependencies will be
         # repeated, but that's by design
         for key in key_list:
             tmp_node = get_and_prep_elem(key)
 
-#TODO this is a work around
-            modifier = tmp_node.action
-            modifier = modifier[1] if len(modifier) > 1 else modifier
-            file_write(
-                    output,
-                    '    "' + tmp_node.name + '"' + modifier + '\n')
+            #TODO this is a work around
+            try:
+                file_write(output, '    "' + tmp_node.name + 
+                    '"' + tmp_node.action.get_modifier() + '\n')
+            except TypeError:
+              print("exploded", tmp_node.action.label)
+              pass
 
         file_write(output, "}\n")
     
