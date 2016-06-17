@@ -14,7 +14,7 @@ nice_line_length = 25
 no_output = False
 had_syntax_error = False
 
-node_list = []
+decl_list = []
 node_dict = {}
 key_list = []
 
@@ -39,11 +39,14 @@ cleanup = lambda tok : tok[1:].strip() if tok[0] in opt_dict else tok
 
 # CLASSES
 class Node:
+    ''' encapsulates node's name, children, and state
+    '''
     def __init__(self, name):
         self._name = name
         self._orig_name = name
         self._children = []
         self._prepped = False
+        self._alt_syntax = False
         self._action = ['', '']
         return
 
@@ -76,6 +79,13 @@ class Node:
         return
 
     @property
+    def alt_syntax(self):
+        return self._alt_syntax
+    def alt_syntax(self, value):
+        self._alt_syntax = value
+        return
+
+    @property
     def action(self): 
         return self._action[1] if self._action[0] in opts_list else ''
     @property
@@ -87,8 +97,31 @@ class Node:
         return
     def set_action(self):
         if self._name[0] in opt_dict: 
-            self._action = opt_dict[self._name[0]]
+            self._action = opt_dict[self._name[0]][1]
         return
+
+class Decl:
+    ''' encapsulates declerations's line, element number, name, and node
+    '''
+    def __init__(self, line_num, elem_num, name, node):
+        self._line_num = line_num
+        self._elem_num = elem_num
+        self._name = name
+        self._node = node
+        return
+  
+    @property
+    def line_num(self):
+        return self._line_num
+    @property
+    def elem_num(self):
+        return self._elem_num
+    @property
+    def name(self):
+        return self._name
+    @property
+    def node(self):
+        return self._node
 
 
 # FUNCTIONS
@@ -124,22 +157,26 @@ def print_dependency(outer_elem, ordered_copy, output):
     ''' node, list of nodes, file handle -> none
     '''
     # if it has children
-    if outer_elem[3].children:
+    if outer_elem.node.children:
         child_count = 0
-        num_children = len(outer_elem[3].children)
+        num_children = len(outer_elem.node.children)
         output.write('  ')
 
-        output.write(str(outer_elem[1]).ljust(2 ,' ') + ' <- ')
+        output.write(str(outer_elem.elem_num).ljust(2 ,' ') + ' <- ')
+
+        if outer_elem.node.alt_syntax:
+            pass
+            print("alt syntax node", outer_elem.node.orig_name)
 
         # for each child
-        for child in outer_elem[3].children:
+        for child in outer_elem.node.children:
             key = ' '
 
             # find the child in the ordered list
             for inner_elem in ordered_copy:
 
-                if inner_elem[3].orig_name == child.orig_name:
-                    key = str(inner_elem[1])
+                if inner_elem.node.orig_name == child.orig_name:
+                    key = str(inner_elem.elem_num)
 
             if child_count < num_children -1:
                 output.write(key + ',')
@@ -154,24 +191,24 @@ def cleanup_input(ordered_node, filename):
     reconstructs the input file so that inputs are ordered correctly and
     intentional spacing is maintained
     '''
-    ordered_elems = sorted(node_list, key=lambda x: int(x[0]))
+    ordered_decls = sorted(decl_list, key=lambda x: int(x.line_num))
 
     with open(filename, 'w') as output:
         output.write(shebang + '\n')
-        found_first_elem = False
+        found_first_decl = False
 
         # declarations
-        for elem in ordered_elems:
-            if elem[1] != -1:
-                found_first_elem = True
-                output.write(format(elem[1], ' 3d'))
+        for decl in ordered_decls:
+            if decl.elem_num != -1:
+                found_first_decl = True
+                output.write(format(decl.elem_num, ' 3d'))
 
-                if elem[3].orig_name[0] in opt_dict:
-                    output.write(': ' + elem[3].orig_name + '\n')
+                if decl.node.orig_name[0] in opt_dict:
+                    output.write(': ' + decl.node.orig_name + '\n')
                 else:
-                    output.write(':  ' + elem[3].orig_name + '\n')
+                    output.write(':  ' + decl.node.orig_name + '\n')
             else:
-                if found_first_elem:
+                if found_first_decl:
                     output.write('\n')
 
         # options
@@ -180,14 +217,14 @@ def cleanup_input(ordered_node, filename):
             output.write('  ' + option + '\n')
 
         # filter out newlines and make a copy for nested iteration
-        ordered_elems[:] = filter(lambda x : x[1] != -1, ordered_elems)
-        ordered_copy = copy.deepcopy(ordered_elems)
+        ordered_decls[:] = filter(lambda x : x.elem_num != -1, ordered_decls)
+        ordered_copy = copy.deepcopy(ordered_decls)
 
         # dependencies
         output.write('\ndependencies\n')
 
-        for outer_elem in ordered_elems:
-            print_dependency(outer_elem, ordered_elems, output)
+        for outer_decl in ordered_decls:
+            print_dependency(outer_decl, ordered_decls, output)
 
     return
 
@@ -225,23 +262,23 @@ def get_and_prep_elem(key):
 
 def parse_inputs(line, line_num, elem_num):
     ''' string, int, int -> int
-    builds key_list and node_list structures from each input line
+    builds key_list and decl_list structures from each input line
         1 : Chop wood
         2 : Buy matches
     '''
     parts = line.split(':', 1)
 
     if len(parts) > 1:
-        left = clean_str(parts[0])
-        right = Node(clean_str(parts[1]))
+        decl_name = clean_str(parts[0])
+        decl_node = Node(clean_str(parts[1]))
 
-        node_list.append([line_num, elem_num, left, right])
+        decl_list.append( Decl(line_num, elem_num, decl_name, decl_node))
         elem_num = elem_num + 1
 
-        if left not in key_list:
-            key_list.append(left)
+        if decl_name not in key_list:
+            key_list.append(decl_name)
 
-        node_dict[left] = right
+        node_dict[decl_name] = decl_node
 
     # try to catch syntax errors
     elif ((parts[0].lower() not in ['', 'options']) and
@@ -254,7 +291,7 @@ def parse_inputs(line, line_num, elem_num):
     # keep track of extra line breaks so we can reconstruct 
     # them in cleanup mode
     else:
-        node_list.append([line_num, -1, '', ''])
+        decl_list.append( Decl(line_num, -1, '', None))
 
     return elem_num
 
@@ -300,7 +337,6 @@ def parse_dependencies(line, output, line_num):
       parts = line.split('->', 1)
 
       if len(parts) > 1:
-        print('using alternate syntax')
         # get the right side once
         try:
             right_node = get_and_prep_elem(clean_str(parts[0]) )
@@ -315,10 +351,11 @@ def parse_dependencies(line, output, line_num):
 
             left_node = get_and_prep_elem(clean_str(elem) )
             left_node.add_child(right_node)
+            print("setting", left_node.name, "to alt syn")
+            left_node.alt_syntax = True
 
             file_write(output, '    "' + right_node.name + '" -> "' + 
                        left_node.name + '"' + left_node.action + '\n')
-        print(parts[0], parts[1])
 
       elif parts[0].lower() not in ['', 'dependencies']:
           had_syntax_error = True
@@ -405,16 +442,20 @@ def main(argv):
         # repeated, but that's by design
         for key in key_list:
             tmp_node = get_and_prep_elem(key)
+
+#TODO this is a work around
+            modifier = tmp_node.action
+            modifier = modifier[1] if len(modifier) > 1 else modifier
             file_write(
                     output,
-                    '    "' + tmp_node.name + '"' + tmp_node.action + '\n')
+                    '    "' + tmp_node.name + '"' + modifier + '\n')
 
         file_write(output, "}\n")
     
     # clean up the input file?
     if 'cleanup' in opts_list:
         if not had_syntax_error:
-            cleanup_input(node_list, input_fn)
+            cleanup_input(decl_list, input_fn)
         else:
             print('cleanup requested but not performed due to syntax error')
 
