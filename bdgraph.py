@@ -6,6 +6,10 @@ python bdgraph.py input_file [output_file]
 import sys, getopt, copy, os
 
 # GLOBALS
+shebang = '''#!/usr/local/bin/bdgraph
+# a <- b,c,d == if a,b,c then d
+# a -> b,c,d == if a then b,c,d
+'''
 nice_line_length = 25
 no_output = False
 had_syntax_error = False
@@ -14,11 +18,11 @@ node_list = []
 node_dict = {}
 key_list = []
 
-available_options = [
+avail_opts = [
     'color_complete', 'color_urgent', 'color_next', 'cleanup'
     ]
-options_list = []
-options_dict = {
+opts_list = []
+opt_dict = {
     '@' : ['color_complete', ' [color="springgreen"];'],
     '!' : ['color_urgent',' [color="red"];'],
     '_' : ['color_next', '[color="0.499 0.386 1.000"];'] 
@@ -30,7 +34,7 @@ options_dict = {
 clean_str = lambda elm : str(elm).strip()
 
 ''' string -> string'''
-cleanup = lambda tok : tok[1:].strip() if tok[0] in options_dict else tok
+cleanup = lambda tok : tok[1:].strip() if tok[0] in opt_dict else tok
 
 
 # CLASSES
@@ -73,7 +77,7 @@ class Node:
 
     @property
     def action(self): 
-        return self._action[1] if self._action[0] in options_list else ''
+        return self._action[1] if self._action[0] in opts_list else ''
     @property
     def action_type(self): 
         return self._action[0]
@@ -82,8 +86,8 @@ class Node:
         self._action = value
         return
     def set_action(self):
-        if self._name[0] in options_dict: 
-            self._action = options_dict[self._name[0]]
+        if self._name[0] in opt_dict: 
+            self._action = opt_dict[self._name[0]]
         return
 
 
@@ -94,10 +98,9 @@ def split_on_nearest_space(word, start):
     and inserts a newline character there
     '''
 
-    length = len(word)
     right = left = start
 
-    while right < length and left > 0:
+    while right < len(word) and left > 0:
         if word[right] == ' ':
             return word[:right] + '\\n' + word[right:]
 
@@ -117,6 +120,35 @@ def file_write(output, string):
         output.write(string)
     return
 
+def print_dependency(outer_elem, ordered_copy, output):
+    ''' node, list of nodes, file handle -> none
+    '''
+    # if it has children
+    if outer_elem[3].children:
+        child_count = 0
+        num_children = len(outer_elem[3].children)
+        output.write('  ')
+
+        output.write(str(outer_elem[1]).ljust(2 ,' ') + ' <- ')
+
+        # for each child
+        for child in outer_elem[3].children:
+            key = ' '
+
+            # find the child in the ordered list
+            for inner_elem in ordered_copy:
+
+                if inner_elem[3].orig_name == child.orig_name:
+                    key = str(inner_elem[1])
+
+            if child_count < num_children -1:
+                output.write(key + ',')
+                child_count = child_count +1
+
+            else:
+                output.write(key + '\n')
+    return
+
 def cleanup_input(ordered_node, filename):
     ''' list of nodes, string -> none
     reconstructs the input file so that inputs are ordered correctly and
@@ -125,56 +157,38 @@ def cleanup_input(ordered_node, filename):
     ordered_elems = sorted(node_list, key=lambda x: int(x[0]))
 
     with open(filename, 'w') as output:
-        output.write("#!/usr/local/bin/bdgraph")
+        output.write(shebang + '\n')
+        found_first_elem = False
 
+        # declarations
         for elem in ordered_elems:
             if elem[1] != -1:
-                output.write(format(elem[1], " 3d"))
+                found_first_elem = True
+                output.write(format(elem[1], ' 3d'))
 
-                if elem[3].orig_name[0] in options_dict:
+                if elem[3].orig_name[0] in opt_dict:
                     output.write(': ' + elem[3].orig_name + '\n')
                 else:
                     output.write(':  ' + elem[3].orig_name + '\n')
             else:
-                output.write("\n")
+                if found_first_elem:
+                    output.write('\n')
 
-        output.write("options\n")
-        for option in options_list:
-            output.write("  " + option + "\n")
+        # options
+        output.write('options\n')
+        for option in opts_list:
+            output.write('  ' + option + '\n')
 
         # filter out newlines and make a copy for nested iteration
         ordered_elems[:] = filter(lambda x : x[1] != -1, ordered_elems)
         ordered_copy = copy.deepcopy(ordered_elems)
 
-        output.write("\ndependencies\n")
+        # dependencies
+        output.write('\ndependencies\n')
 
-        # for each node element
         for outer_elem in ordered_elems:
+            print_dependency(outer_elem, ordered_elems, output)
 
-            # if it has children
-            if outer_elem[3].children:
-                child_count = 0
-                num_children = len(outer_elem[3].children)
-                output.write("  ")
-
-                output.write(str(outer_elem[1]).ljust(2 ,' ') + " <- ")
-
-                # for each child
-                for child in outer_elem[3].children:
-                    key = " "
-
-                    # find the child in the ordered list
-                    for inner_elem in ordered_copy:
-
-                        if inner_elem[3].orig_name == child.orig_name:
-                            key = str(inner_elem[1])
-
-                    if child_count < num_children -1:
-                        output.write(key + ",")
-                        child_count = child_count +1
-
-                    else:
-                        output.write(key + "\n")
     return
 
 def get_and_prep_elem(key):
@@ -230,9 +244,11 @@ def parse_inputs(line, line_num, elem_num):
         node_dict[left] = right
 
     # try to catch syntax errors
-    elif parts[0].lower() not in ["", "options", "#!/usr/local/bin/bdgraph"]:
+    elif ((parts[0].lower() not in ['', 'options']) and
+        (parts[0] and parts[0][0] != '#')):
+
         had_syntax_error = True
-        print("ignoring unknown syntax on line: "+ 
+        print('ignoring unknown syntax on line: '+ 
                 str(line_num +1)+ ', "' + parts[0] + '"')
 
     # keep track of extra line breaks so we can reconstruct 
@@ -248,16 +264,17 @@ def parse_options(line):
     '''
     option = clean_str(line.lower())
 
-    if option in available_options:
-        options_list.append(option)
+    if option in avail_opts:
+        opts_list.append(option)
 
     return
 
 def parse_dependencies(line, output, line_num):
     ''' string -> none
     prints the required output for lines of the form
-        1 -> 2
-        1,2,3,4 -> 5
+        2 <- 1
+        5 <- 1,2,3,4
+        1 -> 2,5
     '''
     parts = line.split('<-', 1)
 
@@ -271,7 +288,6 @@ def parse_dependencies(line, output, line_num):
             sys.exit(1)
 
         # for each right side
-        # supports 4 <- 1,2,3
         for elem in parts[1].split(','):
 
             # get each left hand side 
@@ -280,11 +296,34 @@ def parse_dependencies(line, output, line_num):
 
             file_write(output, '    "' + left_node.name + '" -> "' + 
                        right_node.name + '"' + right_node.action + '\n')
+    else:
+      parts = line.split('->', 1)
 
-    elif parts[0].lower() not in ["", "dependencies"]:
-        had_syntax_error = True
-        print('ignoring unknown syntax on line: '+ 
-                str(line_num +0) + ', "' + parts[0] + '"')
+      if len(parts) > 1:
+        print('using alternate syntax')
+        # get the right side once
+        try:
+            right_node = get_and_prep_elem(clean_str(parts[0]) )
+        except KeyError:
+            print('error: unknown dependency "'+clean_str(parts[0]) +
+                    '" on line number: ' + str(line_num) +', "' + line +'"')
+            sys.exit(1)
+
+        # for each left side
+        for elem in parts[1].split(','):
+            print('adding dep')
+
+            left_node = get_and_prep_elem(clean_str(elem) )
+            left_node.add_child(right_node)
+
+            file_write(output, '    "' + right_node.name + '" -> "' + 
+                       left_node.name + '"' + left_node.action + '\n')
+        print(parts[0], parts[1])
+
+      elif parts[0].lower() not in ['', 'dependencies']:
+          had_syntax_error = True
+          print('ignoring unknown syntax on line: '+ 
+                  str(line_num +0) + ', "' + parts[0] + '"')
     return
 
 # MAIN
@@ -315,14 +354,14 @@ def main(argv):
     if len(argv) > 1:
         output_fn = str(argv[1])
     else:
-        output_fn = input_fn + ".dot"
+        output_fn = input_fn + '.dot'
 
     # parse input and write output
     with open(output_fn, 'w') as output:
-        file_write(output, "digraph g{\n")
-        file_write(output, "    rankdir=LR;\n")
-        file_write(output, "    ratio = fill;\n")
-        file_write(output, "    node [style=filled];\n")
+        file_write(output, 'digraph g{\n')
+        file_write(output, '    rankdir=LR;\n')
+        file_write(output, '    ratio = fill;\n')
+        file_write(output, '    node [style=filled];\n')
 
         line_num = 0
         elem_num = 1
@@ -331,10 +370,10 @@ def main(argv):
         for line in content:
             line = clean_str(line)
 
-            if line.lower() == "options":
+            if line.lower() == 'options':
                 inputs_done = True
 
-            if line.lower() == "dependencies":
+            if line.lower() == 'dependencies':
                 options_done = True
             
             if not inputs_done:
@@ -360,22 +399,24 @@ def main(argv):
                         all_deps_met = False
 
                 if all_deps_met:
-                    tmp_node.action = options_dict['_']
+                    tmp_node.action = opt_dict['_']
 
         # write all nodes, nodes with dependencies will be
         # repeated, but that's by design
         for key in key_list:
             tmp_node = get_and_prep_elem(key)
-            file_write(output, '    "' + tmp_node.name + '"' + tmp_node.action + '\n')
+            file_write(
+                    output,
+                    '    "' + tmp_node.name + '"' + tmp_node.action + '\n')
 
         file_write(output, "}\n")
     
     # clean up the input file?
-    if 'cleanup' in options_list:
+    if 'cleanup' in opts_list:
         if not had_syntax_error:
             cleanup_input(node_list, input_fn)
         else:
-            print("cleanup requested but not performed due to syntax error")
+            print('cleanup requested but not performed due to syntax error')
 
     return
 

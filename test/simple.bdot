@@ -1,11 +1,22 @@
+#!/usr/local/bin/bdgraph
+# a <- b,c,d == if a,b,c then d
+# a -> b,c,d == if a then b,c,d
+
   1: @Get out of bed
   2:  Put on socks
   3:  Put on shoes
   4:  Go to work
+  5:  Find socks
+
+  6:  win the lottery
+  7:  buy a house
+  8:  buy a boat
 
 options
   cleanup
 
 dependencies
-  1,2 -> 3
-  3 -> 4
+  4  <- 1,2,3
+  5  <- 2
+  7  <- 6
+  8  <- 6
