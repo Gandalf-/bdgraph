@@ -28,14 +28,12 @@ opt_dict = {
     '_' : ['color_next', '[color="0.499 0.386 1.000"];'] 
     }
 
-
 # HELPERS
 ''' string -> string'''
 clean_str = lambda elm : str(elm).strip()
 
 ''' string -> string'''
 cleanup = lambda tok : tok[1:].strip() if tok[0] in opt_dict else tok
-
 
 # CLASSES
 class Node:
@@ -45,6 +43,7 @@ class Node:
         self._name = name
         self._orig_name = name
         self._children = []
+        self._parents = []
         self._prepped = False
         self._alt_syntax = False
         self._action = Action()
@@ -65,9 +64,15 @@ class Node:
     @property
     def children(self): 
         return self._children
-
     def add_child(self, child):
         self._children.append(child)
+        return
+
+    @property
+    def parents(self):
+        return self._parents
+    def add_parent(self, parent):
+        self._parents.append(parent)
         return
 
     @property
@@ -151,7 +156,6 @@ class Action:
                 self._modifier = opt_dict[key][1]
         return
 
-
 # FUNCTIONS
 def split_on_nearest_space(word, start):
     ''' string, int -> string
@@ -190,28 +194,32 @@ def print_dependency(outer_elem, ordered_copy, output):
         num_children = len(outer_elem.node.children)
         output.write('  ')
 
-        output.write(str(outer_elem.elem_num).ljust(2 ,' ') + ' <- ')
+        alt_syntax = False
+        for parent in outer_elem.parents:
+            if len(parent.children) != 1:
+                alt_syntax = False
 
-        if outer_elem.node.alt_syntax:
-            pass
-            print("alt syntax node", outer_elem.node.orig_name)
+        if alt_syntax:
+          pass
 
-        # for each child
-        for child in outer_elem.node.children:
-            key = ' '
+        else:
+          # a <- b,c,d == if a,b,c then d
+          output.write(str(outer_elem.elem_num).ljust(2 ,' ') + ' <- ')
 
-            # find the child in the ordered list
-            for inner_elem in ordered_copy:
+          for child in outer_elem.node.children:
+              key = ' '
 
-                if inner_elem.node.orig_name == child.orig_name:
-                    key = str(inner_elem.elem_num)
+              # find the child in the ordered list
+              for inner_elem in ordered_copy:
+                  if inner_elem.node.orig_name == child.orig_name:
+                      key = str(inner_elem.elem_num)
 
-            if child_count < num_children -1:
-                output.write(key + ',')
-                child_count = child_count +1
+              if child_count < num_children -1:
+                  output.write(key + ',')
+                  child_count = child_count +1
 
-            else:
-                output.write(key + '\n')
+              else:
+                  output.write(key + '\n')
     return
 
 def cleanup_input(ordered_node, filename):
@@ -335,7 +343,7 @@ def parse_options(line):
     return
 
 def parse_dependencies(line, output, line_num):
-    ''' string -> none
+    ''' string, file handle, int -> none
     prints the required output for lines of the form
         2 <- 1
         5 <- 1,2,3,4
@@ -344,6 +352,7 @@ def parse_dependencies(line, output, line_num):
     parts = line.split('<-', 1)
 
     if len(parts) > 1:
+        # a <- b,c,d == if a,b,c then d
         # get the left side once
         try:
             right_node = get_and_prep_elem(clean_str(parts[0]) )
@@ -354,10 +363,9 @@ def parse_dependencies(line, output, line_num):
 
         # for each right side
         for elem in parts[1].split(','):
-
-            # get each left hand side 
             left_node = get_and_prep_elem(clean_str(elem) )
             right_node.add_child(left_node)
+            left_node.add_parent(right_node)
 
             file_write(output, '    "' + left_node.name + '" -> "' + 
                        right_node.name + '"' + 
@@ -366,26 +374,25 @@ def parse_dependencies(line, output, line_num):
       parts = line.split('->', 1)
 
       if len(parts) > 1:
-        # get the right side once
+        # a -> b,c,d == if a then b,c,d
+        # get the left side once
         try:
-            right_node = get_and_prep_elem(clean_str(parts[0]) )
+            left_node = get_and_prep_elem(clean_str(parts[0]) )
         except KeyError:
             print('error: unknown dependency "'+clean_str(parts[0]) +
                     '" on line number: ' + str(line_num) +', "' + line +'"')
             sys.exit(1)
 
-        # for each left side
+        # for each right side
         for elem in parts[1].split(','):
-            print('adding dep')
-
-            left_node = get_and_prep_elem(clean_str(elem) )
-            left_node.add_child(right_node)
-            print("setting", left_node.name, "to alt syn")
+            right_node = get_and_prep_elem(clean_str(elem) )
+            right_node.add_child(left_node)
+            right_node.add_parent(left_node)
             left_node.alt_syntax = True
 
-            file_write(output, '    "' + right_node.name + '" -> "' + 
-                       left_node.name + '"' + 
-                       left_node.action.get_modifier() + '\n')
+            file_write(output, '    "' + left_node.name + '" -> "' + 
+                       right_node.name + '"' + 
+                       right_node.action.get_modifier() + '\n')
 
       elif parts[0].lower() not in ['', 'dependencies']:
           had_syntax_error = True
@@ -472,13 +479,9 @@ def main(argv):
         for key in key_list:
             tmp_node = get_and_prep_elem(key)
 
-            #TODO this is a work around
-            try:
-                file_write(output, '    "' + tmp_node.name + 
-                    '"' + tmp_node.action.get_modifier() + '\n')
-            except TypeError:
-              print("exploded", tmp_node.action.label)
-              pass
+            file_write(
+                output, '    "' + tmp_node.name + 
+                '"' + tmp_node.action.get_modifier() + '\n')
 
         file_write(output, "}\n")
     
