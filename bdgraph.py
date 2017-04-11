@@ -3,10 +3,10 @@
 python bdgraph.py input_file [output_file]
 '''
 
-import sys, getopt, copy, os
+import sys, copy, os
 
 # GLOBALS
-shebang = '''#!/usr/local/bin/bdgraph
+SHEBANG = '''#!/usr/local/bin/bdgraph
 # a <- b,c,d == if a,b,c then d
 # a -> b,c,d == if a then b,c,d
 '''
@@ -25,14 +25,14 @@ opts_list = []
 opt_dict = {
     '@' : ['color_complete', ' [color="springgreen"];'],
     '!' : ['color_urgent',' [color="red"];'],
-    '_' : ['color_next', '[color="0.499 0.386 1.000"];'] 
+    '_' : ['color_next', '[color="0.499 0.386 1.000"];']
     }
 
 # HELPERS
-''' string -> string'''
+#''' string -> string'''
 clean_str = lambda elm : str(elm).strip()
 
-''' string -> string'''
+#''' string -> string'''
 cleanup = lambda tok : tok[1:].strip() if tok[0] in opt_dict else tok
 
 # CLASSES
@@ -50,19 +50,19 @@ class Node:
         return
 
     @property
-    def name(self): 
+    def name(self):
         return self._name
     @name.setter
-    def name(self, value): 
+    def name(self, value):
         self._name = value
         return
 
     @property
-    def orig_name(self): 
+    def orig_name(self):
         return self._orig_name
 
     @property
-    def children(self): 
+    def children(self):
         return self._children
     def add_child(self, child):
         self._children.append(child)
@@ -76,22 +76,22 @@ class Node:
         return
 
     @property
-    def prepped(self): 
+    def prepped(self):
         return self._prepped
     @prepped.setter
-    def prepped(self, value): 
+    def prepped(self, value):
         self._prepped = value
         return
 
     @property
     def alt_syntax(self):
         return self._alt_syntax
+    @prepped.setter
     def alt_syntax(self, value):
         self._alt_syntax = value
-        return
 
     @property
-    def action(self): 
+    def action(self):
         return self._action
 
 class Decl:
@@ -103,7 +103,7 @@ class Decl:
         self._name = name
         self._node = node
         return
-  
+
     @property
     def line_num(self):
         return self._line_num
@@ -200,26 +200,26 @@ def print_dependency(outer_elem, ordered_copy, output):
                 alt_syntax = False
 
         if alt_syntax:
-          pass
+            pass
 
         else:
-          # a <- b,c,d == if a,b,c then d
-          output.write(str(outer_elem.elem_num).ljust(2 ,' ') + ' <- ')
+            # a <- b,c,d == if a,b,c then d
+            output.write(str(outer_elem.elem_num).ljust(2 ,' ') + ' <- ')
 
-          for child in outer_elem.node.children:
-              key = ' '
+            for child in outer_elem.node.children:
+                key = ' '
 
-              # find the child in the ordered list
-              for inner_elem in ordered_copy:
-                  if inner_elem.node.orig_name == child.orig_name:
-                      key = str(inner_elem.elem_num)
+                # find the child in the ordered list
+                for inner_elem in ordered_copy:
+                    if inner_elem.node.orig_name == child.orig_name:
+                        key = str(inner_elem.elem_num)
 
-              if child_count < num_children -1:
-                  output.write(key + ',')
-                  child_count = child_count +1
+                if child_count < num_children -1:
+                    output.write(key + ',')
+                    child_count = child_count +1
 
-              else:
-                  output.write(key + '\n')
+                else:
+                    output.write(key + '\n')
     return
 
 def cleanup_input(ordered_node, filename):
@@ -230,7 +230,7 @@ def cleanup_input(ordered_node, filename):
     ordered_decls = sorted(decl_list, key=lambda x: int(x.line_num))
 
     with open(filename, 'w') as output:
-        output.write(shebang + '\n')
+        output.write(SHEBANG + '\n')
         found_first_decl = False
 
         # declarations
@@ -271,7 +271,7 @@ def get_and_prep_elem(key):
     '''
     node = node_dict[clean_str(key)]
 
-    if not node.prepped: 
+    if not node.prepped:
         token = node.name
 
         length = len(token)
@@ -321,10 +321,10 @@ def parse_inputs(line, line_num, elem_num):
         (parts[0] and parts[0][0] != '#')):
 
         had_syntax_error = True
-        print('ignoring unknown syntax on line: '+ 
+        print('ignoring unknown syntax on line: '+
                 str(line_num +1)+ ', "' + parts[0] + '"')
 
-    # keep track of extra line breaks so we can reconstruct 
+    # keep track of extra line breaks so we can reconstruct
     # them in cleanup mode
     else:
         decl_list.append( Decl(line_num, -1, '', None))
@@ -367,36 +367,36 @@ def parse_dependencies(line, output, line_num):
             right_node.add_child(left_node)
             left_node.add_parent(right_node)
 
-            file_write(output, '    "' + left_node.name + '" -> "' + 
-                       right_node.name + '"' + 
+            file_write(output, '    "' + left_node.name + '" -> "' +
+                       right_node.name + '"' +
                        right_node.action.get_modifier() + '\n')
     else:
-      parts = line.split('->', 1)
+        parts = line.split('->', 1)
 
-      if len(parts) > 1:
-        # a -> b,c,d == if a then b,c,d
-        # get the left side once
-        try:
-            left_node = get_and_prep_elem(clean_str(parts[0]) )
-        except KeyError:
-            print('error: unknown dependency "'+clean_str(parts[0]) +
-                    '" on line number: ' + str(line_num) +', "' + line +'"')
-            sys.exit(1)
+        if len(parts) > 1:
+          # a -> b,c,d == if a then b,c,d
+          # get the left side once
+            try:
+                left_node = get_and_prep_elem(clean_str(parts[0]) )
+            except KeyError:
+                print('error: unknown dependency "'+clean_str(parts[0]) +
+                        '" on line number: ' + str(line_num) +', "' + line +'"')
+                sys.exit(1)
 
-        # for each right side
-        for elem in parts[1].split(','):
-            right_node = get_and_prep_elem(clean_str(elem) )
-            right_node.add_child(left_node)
-            right_node.add_parent(left_node)
-            left_node.alt_syntax = True
+            # for each right side
+            for elem in parts[1].split(','):
+                right_node = get_and_prep_elem(clean_str(elem) )
+                right_node.add_child(left_node)
+                right_node.add_parent(left_node)
+                left_node.alt_syntax = True
 
-            file_write(output, '    "' + left_node.name + '" -> "' + 
-                       right_node.name + '"' + 
-                       right_node.action.get_modifier() + '\n')
+                file_write(output, '    "' + left_node.name + '" -> "' +
+                           right_node.name + '"' +
+                           right_node.action.get_modifier() + '\n')
 
-      elif parts[0].lower() not in ['', 'dependencies']:
-          had_syntax_error = True
-          print('ignoring unknown syntax on line: '+ 
+        elif parts[0].lower() not in ['', 'dependencies']:
+            had_syntax_error = True
+            print('ignoring unknown syntax on line: '+
                   str(line_num +0) + ', "' + parts[0] + '"')
     return
 
@@ -449,7 +449,7 @@ def main(argv):
 
             if line.lower() == 'dependencies':
                 options_done = True
-            
+
             if not inputs_done:
                 elem_num = parse_inputs(line, line_num, elem_num)
 
@@ -480,11 +480,11 @@ def main(argv):
             tmp_node = get_and_prep_elem(key)
 
             file_write(
-                output, '    "' + tmp_node.name + 
+                output, '    "' + tmp_node.name +
                 '"' + tmp_node.action.get_modifier() + '\n')
 
         file_write(output, "}\n")
-    
+
     # clean up the input file?
     if 'cleanup' in opts_list:
         if not had_syntax_error:
