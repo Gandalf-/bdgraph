@@ -1,23 +1,30 @@
 #!/usr/local/bin/bdgraph
-# a <- b,c,d == if a,b,c then d
-# a -> b,c,d == if a then b,c,d
+# 1,2,3 <- 4,5,6 == 1,2,3 each require 4,5,6
+# 1,2,3 -> 4,5,6 == 1,2,3 each allow 4,5,6
 
-  1: @Get out of bed
-  2:  Put on socks
-  3:  Put on shoes
-  4:  Go to work
-  5:  Find socks
-
-  6:  win the lottery
-  7:  buy a house
-  8:  buy a boat
+   1: @Get out of bed
+   2: Put on socks
+   3: Put on shoes
+   4: Go to work
+   5: Find socks
+   6: win the lottery
+   7: !buy a house
+   8: buy a boat
+   9: get in boat
+  10: sail the world
+  11: sail back home
 
 options
+  color_urgent
   color_complete
   color_next
   cleanup
 
 dependencies
+  1 -> 2,3,5
+  2 <- 5
   4 <- 2,3
   6 -> 7,8
   6 <- 4
+  8 -> 9,10,11
+  11 <- 7
