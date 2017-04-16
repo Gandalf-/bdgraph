@@ -363,10 +363,11 @@ class Node:
         self.description = ''       # string
         self.pretty_desc = ''       # string
         self.node_option = None     # Node_Option
+
         self.provides = []          # list of Node
         self.requires = []          # list of Node
-        self.number = str(Node.node_counter)
 
+        self.number = str(Node.node_counter)
         self.label, self.description = [x.strip() for x in label.split(':')]
 
         # break up description to multiple lines
@@ -394,22 +395,40 @@ class Node:
         print(self.number + ' : ' + self.description)
         if self.node_option:
             print('option: ' + self.node_option.type)
+
         if self.provides:
             print('-> ' + ' '.join([x.number for x in self.provides]))
         if self.requires:
             print('<- ' + ' '.join([x.number for x in self.requires]))
+
         print()
 
     def add_require(self, providing_node):
-        '''
-        '''
+        ''' Node -> none
+
+        providing_node -> self
+
+        adds the supplied node to the list of nodes that this node requires.
+        this is equivalent to adding the current node as a child of the
+        providing_node '''
+
         if providing_node not in self.requires:
+
+            # add the providing_node to our requirements
             self.requires.append(providing_node)
 
     def add_provide(self, requiring_node):
-        '''
-        '''
+        ''' Node -> none
+
+        self -> requiring_node
+
+        adds the supplied node to the list of nodes that this node provides to.
+        this is equivalent to adding the current node as a parent of the
+        requiring_node '''
+
         if requiring_node not in self.provides:
+
+            # add the requiring_node to our provisions
             self.provides.append(requiring_node)
 
     def write_dot(self, fd, graph_options):
@@ -496,7 +515,6 @@ class Graph_Option:
             self.label = line
         else:
             raise SyntaxError
-        #self.label = line if line in options else None
 
 
 class Node_Option:
@@ -564,8 +582,8 @@ def main(argv):
 
     graph = Graph(content)
     graph.handle_options(input_fn)
-    graph.compress_representation()
     graph.show()
+    graph.compress_representation()
     graph.write_dot(output_fn)
 
 
