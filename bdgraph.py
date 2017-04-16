@@ -321,7 +321,7 @@ class Graph(object):
                         inverse.provides.remove(real_node)
                     except ValueError: pass
 
-    def handle_options(self, input_fn):
+    def handle_options(self):
         ''' string -> none
 
         handles non-user specified options, such as color_next and cleanup. '''
@@ -344,10 +344,6 @@ class Graph(object):
 
                 if (not node.node_option) and requirements_satisfied:
                     node.node_option = Node_Option('_')
-
-        # rewrite the input file?
-        if 'cleanup' in options:
-            self.write_config(input_fn)
 
 
 class Node:
@@ -581,10 +577,14 @@ def main(argv):
     content = [line for line in content if line and line[0] != '#']
 
     graph = Graph(content)
-    graph.handle_options(input_fn)
-    graph.show()
+    graph.handle_options()
     graph.compress_representation()
     graph.write_dot(output_fn)
+
+    # rewrite the input file?
+    options = [x.label for x in graph.graph_options]
+    if 'cleanup' in options:
+        graph.write_config(input_fn)
 
 
 if __name__ == '__main__':
