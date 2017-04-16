@@ -109,6 +109,7 @@ class Graph(object):
         '''
         options = ' '.join([x.label for x in self.graph_options])
         print('graph options: ' + options)
+        print()
 
         for node in self.nodes:
             node.show()
@@ -345,6 +346,24 @@ class Graph(object):
                 if (not node.node_option) and requirements_satisfied:
                     node.node_option = Node_Option('_')
 
+    def transitive_reduction(self):
+        ''' none -> none
+        '''
+
+        try:
+            old_limit = sys.getrecursionlimit()
+            sys.setrecursionlimit(len(self.nodes) + 5)
+
+            for node in self.nodes:
+                for child in node.provides:
+                    child.depth_first_search(node, True)
+
+            sys.setrecursionlimit(old_limit)
+
+        except RuntimeError:
+            print('cycle found!')
+            sys.exit(1)
+
 
 class Node:
     '''
@@ -386,7 +405,7 @@ class Node:
         Node.node_counter += 1
 
     def show(self):
-        '''
+        ''' none -> IO
         '''
         print(self.number + ' : ' + self.description)
         if self.node_option:
@@ -499,6 +518,19 @@ class Node:
             self.description = self.description[1:]
             self.pretty_desc = self.pretty_desc[1:]
 
+    def depth_first_search(self, node, skip):
+        ''' node -> none | RuntimeError
+
+        '''
+        if not skip:
+            if self in node.provides:
+                print('removing ' + node.label + ' ' + self.label)
+                node.provides.remove(self)
+                self.requires.remove(node)
+
+        for child in self.provides:
+            child.depth_first_search(node, False)
+
 
 class Graph_Option:
     '''
@@ -578,6 +610,7 @@ def main(argv):
 
     graph = Graph(content)
     graph.handle_options()
+    graph.transitive_reduction()
     graph.compress_representation()
     graph.write_dot(output_fn)
 
