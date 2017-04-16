@@ -13,16 +13,19 @@ logging = False
 # HELPERS
 def log(comment):
     ''' string -> maybe IO
+
+    debugging function, only print if global `logging` is true
     '''
     if logging:
         print(comment)
 
 def split_on_nearest_space(word, start):
     ''' string, int -> string
-    searches left and right of the start point for a space
-    and inserts a newline character there
-    '''
 
+    searches left and right of the start point for a space and inserts a
+    newline character there. this is useful when writing the dot file so that
+    the bubbles aren't stretched out by long descriptions
+    '''
     right = left = start
 
     while right < len(word) and left > 0:
@@ -39,64 +42,83 @@ def split_on_nearest_space(word, start):
 
 
 # CLASSES
-class Graph:
-    '''
+class Graph(object):
+    ''' Class
+
+    The Graph class encapsulates everything about the input file, internal
+    representation, and handles parsing options, and writing output files
     '''
     def __init__(self, contents):
         ''' list of strings -> Graph
-        creates the graph from an list of strings, which come from the input
-        file
+
+        construct a Graph object, handles parsing the input file to create
+        internal representation and options list
         '''
         self.contents = contents        # list of string
         self.nodes = []                 # list of Node
         self.graph_options = []         # list of Graph_Option
 
-        mode = 'definition'
+        mode = 'definition'             # default parsing state
 
         for line in contents:
-            # state machine
+            # state machine, determine state and then take appropriate action
             if line == 'options':
                 mode = 'options'
+                continue
 
             elif line == 'dependencies':
                 mode = 'dependencies'
+                continue
 
             # actions
             if mode == 'definition':
                 log('definition: ' + line)
+                try:
+                    self.nodes.append(Node(line))
 
-                new_node = Node(line)
-                if new_node:
-                    self.nodes.append(new_node)
+                except ValueError:
+                    print('error: unrecongized syntax: ' + line)
+                    sys.exit(1)
 
             elif mode == 'options':
                 log('options: ' + line)
+                try:
+                    self.graph_options.append(Graph_Option(line))
 
-                new_option = Graph_Option(line)
-                if new_option:
-                    self.graph_options.append(new_option)
+                except SyntaxError:
+                    print('error: unrecongized option: ' + line)
+                    sys.exit(1)
 
             elif mode == 'dependencies':
                 log('dependencies: ' + line)
-                self.update_dependencies(line)
+                try:
+                    self.update_dependencies(line)
 
-        # remove blanks
-        self.nodes = [x for x in self.nodes if x and x.label]
-        self.graph_options = [x for x in self.graph_options if x and x.label]
+                except SyntaxError:
+                    print('error: unrecongized dependency type: ' + line)
+                    sys.exit(1)
+
+                except ValueError:
+                    print('error: unrecongized node reference: ' + line)
+                    sys.exit(1)
 
     def show(self):
         ''' none -> IO
+
         prints a representation of the graph to the console
         '''
-        print('options: ' + ' '.join([x.label for x in self.graph_options]))
+        options = ' '.join([x.label for x in self.graph_options])
+        print('graph options: ' + options)
 
         for node in self.nodes:
             node.show()
 
     def write_dot(self, file_name):
         ''' string -> IO
-        writes the graph to a file in graphviz dot format
-        '''
+
+        writes the graph to a file in graphviz dot format. nodes write
+        themselves and handle their own options '''
+
         with open(file_name, 'w') as fd:
             # header
             fd.write('digraph g{\n')
@@ -113,9 +135,12 @@ class Graph:
 
     def write_config(self, file_name):
         ''' string -> IO
-        '''
-        with open(file_name, 'w') as fd:
 
+        rewrites the input file. this reformats definitions, options, and
+        dependencies. it's also run after the Graph.compress_representation()
+        function so the dependency description is minimal '''
+
+        with open(file_name, 'w') as fd:
             # header
             fd.write('#!/usr/local/bin/bdgraph\n')
             fd.write('# 1,2,3 <- 4,5,6 == 1,2,3 each require 4,5,6\n')
@@ -139,12 +164,15 @@ class Graph:
                 node.write_dependencies(fd)
 
     def update_dependencies(self, line):
-        ''' string -> none
-        update the Nodes referenced in the dependency line provided. Inputs are
-        in the form
-        1,2,3 -> 4,5,6
-        1,2,3 <- 4,5,6
-        '''
+        ''' string -> none | SyntaxError, ValueError
+
+        update the Nodes referenced in the dependency line provided.
+        inputs are in the form:
+            1,2,3 -> 4,5,6
+            1,2,3 <- 4,5,6
+
+        unrecongized dependency type throws a SyntaxError
+        unrecongized node references through AttributeError '''
 
         # determine dependency type
         require = line.split('<-')
@@ -160,9 +188,9 @@ class Graph:
             providing_nodes = allow[0].split(',')
             requiring_nodes = allow[1].split(',')
 
-        # unrecongized, ignore
+        # unrecongized dependency type
         else:
-            return
+            raise SyntaxError
 
         # clean up labels
         providing_nodes = [x.strip() for x in providing_nodes]
@@ -179,21 +207,26 @@ class Graph:
                 providing_node.add_provide(requiring_node)
 
     def find_node(self, label):
-        ''' string -> Node
+        ''' string -> Node | ValueError
+
         search through the graph's nodes for the node with the same label as
-        the one provided
-        '''
+        the one provided '''
+
         for node in self.nodes:
             if node.label == label:
                 log('found: ' + label)
                 return node
 
         log('failed to find: ' + label)
-        return None
+        raise ValueError
 
     def find_most(self, mode):
         ''' string -> Node
-        '''
+
+        search through the nodes for the one that requires the most nodes or
+        provides to the most nodes, depending on mode. used by
+        Graph.compress_representation() '''
+
         highest = self.nodes[0]
 
         for node in self.nodes:
@@ -247,10 +280,13 @@ class Graph:
             num_provides = len(most_provide.provides)
             num_requires = len(most_require.requires)
 
+            # there are no more relationships in the copied graph, stop
             if num_provides == num_requires == 0:
                 break
 
+            # the most representative relationship is a provision
             elif num_provides > num_requires:
+
                 copy_node = most_provide
                 real_node = self.find_node(copy_node.label)
 
@@ -267,6 +303,7 @@ class Graph:
                         inverse.requires.remove(real_node)
                     except ValueError: pass
 
+            # the most representative relationship is a requirement
             else:
                 copy_node = most_require
                 real_node = self.find_node(copy_node.label)
@@ -285,15 +322,17 @@ class Graph:
                     except ValueError: pass
 
     def handle_options(self, input_fn):
-        ''' string -> IO
-        '''
+        ''' string -> none
+
+        handles non-user specified options, such as color_next and cleanup. '''
 
         options = [x.label for x in self.graph_options]
 
         if 'color_next' in options:
             for node in self.nodes:
 
-                # all requiring node have the complete flag?
+                # all requiring nodes have the complete flag? this is also true
+                # when the current node doesn't have any requiring nodes
                 requirements_satisfied = True
 
                 for req_node in node.requires:
@@ -308,7 +347,6 @@ class Graph:
 
         # rewrite the input file?
         if 'cleanup' in options:
-            self.compress_representation()
             self.write_config(input_fn)
 
 
@@ -318,7 +356,7 @@ class Node:
     node_counter = 1
 
     def __init__(self, label):
-        ''' string -> Node or None
+        ''' string -> Node | ValueError
         '''
         log('node ' + label)
         self.label = ''             # string
@@ -329,31 +367,26 @@ class Node:
         self.requires = []          # list of Node
         self.number = str(Node.node_counter)
 
-        try:
-            self.label, self.description = [x.strip() for x in label.split(':')]
+        self.label, self.description = [x.strip() for x in label.split(':')]
 
-            # break up description to multiple lines
-            desc_len = len(self.description)
-            if desc_len < 50:
-                # break in half
-                self.pretty_desc = split_on_nearest_space(
-                        self.description, desc_len // 2)
-            else:
-                # break in thirds
-                self.pretty_desc = split_on_nearest_space(
-                        self.description, desc_len // 3)
-                self.pretty_desc = split_on_nearest_space(
-                        self.pretty_desc, 2 * (desc_len // 3))
+        # break up description to multiple lines
+        desc_len = len(self.description)
+        if desc_len < 50:
+            # break in half
+            self.pretty_desc = split_on_nearest_space(
+                    self.description, desc_len // 2)
+        else:
+            # break in thirds
+            self.pretty_desc = split_on_nearest_space(
+                    self.description, desc_len // 3)
+            self.pretty_desc = split_on_nearest_space(
+                    self.pretty_desc, 2 * (desc_len // 3))
 
-            # check for options flags
-            self.parse_options()
+        # check for options flags
+        self.parse_options()
 
-            # update node counter
-            Node.node_counter += 1
-
-        # ignore unrecongized syntax
-        except ValueError:
-            self.label = None
+        # update node counter
+        Node.node_counter += 1
 
     def show(self):
         '''
@@ -456,10 +489,14 @@ class Graph_Option:
     '''
     '''
     def __init__(self, line):
-        ''' string -> Graph_Option
+        ''' string -> Graph_Option | SyntaxError
         '''
         options = ['color_complete', 'color_next', 'cleanup', 'color_urgent']
-        self.label = line if line in options else None
+        if line in options:
+            self.label = line
+        else:
+            raise SyntaxError
+        #self.label = line if line in options else None
 
 
 class Node_Option:
@@ -527,6 +564,8 @@ def main(argv):
 
     graph = Graph(content)
     graph.handle_options(input_fn)
+    graph.compress_representation()
+    graph.show()
     graph.write_dot(output_fn)
 
 

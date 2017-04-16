@@ -18,13 +18,15 @@ options
   color_urgent
   color_complete
   color_next
-  cleanup
 
 dependencies
   1 -> 2,3,5
+  3 <- 2
   2 <- 5
   4 <- 2,3
   6 -> 7,8
   6 <- 4
   8 -> 9,10,11
   11 <- 7
+
+  9 -> 10,11
