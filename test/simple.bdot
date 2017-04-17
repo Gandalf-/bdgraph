@@ -1,6 +1,6 @@
 #!/usr/local/bin/bdgraph
-# 1,2,3 <- 4,5,6 == 1,2,3 each require 4,5,6
-# 1,2,3 -> 4,5,6 == 1,2,3 each allow 4,5,6
+# 1 <- 2,3 => 1 requires 2 and 3 
+# 2 -> 3,4 => 2 provides 3 and 4 
 
    1: @Get out of bed
    2: Find socks
