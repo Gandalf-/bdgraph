@@ -1,3 +1,17 @@
+#!/usr/bin/python3
+''' bdgraph.py
+
+Author:
+    Austin Voecks
+
+Description:
+    Reads an input markup file containing definitions, dependencies, and graph
+    options, and writes a corresponding output graphviz dot file
+
+Usage:
+    python3 bdgraph.py input_file [output_file]
+'''
+
 class Node(object):
     ''' Class
 

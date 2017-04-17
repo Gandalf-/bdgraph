@@ -44,7 +44,7 @@ def main(argv):
         # remove comments and blank lines
         content = [line for line in content if line and line[0] != '#']
 
-    graph = Graph(content, logging=True)
+    graph = Graph(content)
     graph.handle_options()
     graph.transitive_reduction()
     graph.compress_representation()

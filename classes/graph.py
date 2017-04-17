@@ -1,3 +1,17 @@
+#!/usr/bin/python3
+''' bdgraph.py
+
+Author:
+    Austin Voecks
+
+Description:
+    Reads an input markup file containing definitions, dependencies, and graph
+    options, and writes a corresponding output graphviz dot file
+
+Usage:
+    python3 bdgraph.py input_file [output_file]
+'''
+
 import sys, copy
 from classes.node import Node, Node_Option
 
@@ -9,7 +23,7 @@ class Graph(object):
     representation, and handles parsing options, and writing output files '''
 
     def __init__(self, contents, logging=False):
-        ''' list of strings, boolean -> Graph
+        ''' list of strings, bool -> Graph
 
         construct a Graph object, handles parsing the input file to create
         internal representation and options list '''
@@ -17,7 +31,7 @@ class Graph(object):
         self.contents = contents        # list of string
         self.nodes = []                 # list of Node
         self.graph_options = []         # list of Graph_Option
-        self.logging = logging          # boolean
+        self.logging = logging          # bool
 
         mode = 'definition'             # default parsing state
 
@@ -31,7 +45,7 @@ class Graph(object):
                 mode = 'dependencies'
                 continue
 
-            # actions
+            # actions, we know our state so do something with the line
             if mode == 'definition':
                 self.log('definition: ' + line)
                 try:
@@ -316,7 +330,9 @@ class Graph(object):
 
             1 -> 2,3     becomes    1 -> 2,3
             1 -> 3
-        '''
+
+        cycles are currently not supported and are detected by
+        sys.getrecursionlimit() exceeding the number of nodes in the graph '''
 
         # limit recursion depth to catch cycles in the graph
         old_limit = sys.getrecursionlimit()
@@ -343,13 +359,15 @@ class Graph(object):
             print(comment)
 
 class Graph_Option:
-    '''
-    '''
+    ''' Class
+
+    Encapsulates the graph level options that are available for nodes to use.
+    For a Node_Option to be valid, it must exist at the graph level as well '''
+
     def __init__(self, line):
         ''' string -> Graph_Option | SyntaxError
 
-        raises SyntaxError if an invalid option is provided
-        '''
+        raises SyntaxError if an invalid option is provided '''
 
         options = ['color_complete', 'color_next', 'cleanup', 'color_urgent']
 
@@ -357,4 +375,3 @@ class Graph_Option:
             self.label = line
         else:
             raise SyntaxError
-

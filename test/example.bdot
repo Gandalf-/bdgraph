@@ -1,26 +1,25 @@
 #!/usr/local/bin/bdgraph
-# 1,2,3 <- 4,5,6 == 1,2,3 each require 4,5,6
-# 1,2,3 -> 4,5,6 == 1,2,3 each allow 4,5,6
+# 1 <- 2,3 => 1 requires 2 and 3 
+# 2 -> 3,4 => 2 provides 3 and 4 
 
-  1: @Apple sauce
-  2: Blueberry sauce
-  3: Cranberry sauce
-  4: Date sauce
-  5: Eggplant sauce
-  6: !Fruit sauce
-  7: Gouda sauce
-  8: @Hello sauce
-  9: Iceland sauce
+   1: Find a fallen log
+   2: Find an ax
+   3: Chop up the log
+   4: Make kindling
+   5: Make a fire
+   6: @Go to the store
+   7: Buy ingredients
+   8: Buy matches
+   9: Make smores!
 
 options
   color_next
-  cleanup
   color_complete
-  color_urgent
+  cleanup
 
 dependencies
-  1 -> 2,3,4,6
-  1 <- 2
-  2 <- 3
-  5 <- 1,2,3,8,9
-  9 -> 1,2,6,7
+  3 <- 1,2
+  4 <- 3
+  5 <- 4,8
+  6 -> 8,7
+  9 <- 5,7

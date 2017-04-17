@@ -22,56 +22,52 @@ are entirely optional.
 
 ### Here's an example!
 ```
-1:  Find a fallen log
-2:  Find an ax
-3:  Chop up the log
-4:  Make kindling
-5:  Make a fire
-
-6: @Go to the store
-7:  Buy ingredients
-8:  Buy matches
-
-9:  Make smores!
+   1: Find a fallen log
+   2: Find an ax
+   3: Chop up the log
+   4: Make kindling
+   5: Make a fire
+   6: @Go to the store
+   7: Buy ingredients
+   8: Buy matches
+   9: Make smores!
 
 options
   color_next
   color_complete
+  cleanup
 
 dependencies
-  1,2 -> 3
-  3 -> 4
-
-  8,4 -> 5
-  6 -> 7
-  6 -> 8
-
-  7,5 -> 9
+  3 <- 1,2
+  4 <- 3
+  5 <- 4,8
+  6 -> 8,7
+  9 <- 5,7
 ```
 ### bdgraph uses this to generate the following:
 Which you can then paste or open in any dot file viewer to get the nice image at the top!
 ```
 digraph g{
-	rankdir=LR;
-	ratio = fill;
-	node [style=filled];
-	"Chop up\n the log" -> "Make\n kindling"
-	"Buy\n matches" -> "Make a\n fire"
-	"Make\n kindling" -> "Make a\n fire"
-	"Find a\n fallen log" -> "Chop up\n the log"
-	"Find\n an ax" -> "Chop up\n the log"
-	"Go to the\n store" -> "Buy\n ingredients"
-	"Go to the\n store" -> "Buy\n matches"
-	"Buy\n ingredients" -> "Make\n smores!"
-	"Make a\n fire" -> "Make\n smores!"
-	"Find a\n fallen log"[color="0.499 0.386 1.000"];
-	"Find\n an ax"[color="0.499 0.386 1.000"];
-	"Chop up\n the log"
-	"Make\n kindling"
-	"Make a\n fire"
-	"Go to the\n store"[color="0.499 0.386 1.000"];
-	"Buy\n ingredients"
-	"Buy\n matches"
-	"Make\n smores!"
+  rankdir=LR;
+  ratio=fill;
+  node [style=filled];
+  "Find a\n fallen log" [color="lightskyblue"]
+  "Find\n an ax" [color="lightskyblue"]
+  "Find a\n fallen log"  -> "Chop up\n the log"
+  "Find\n an ax"  -> "Chop up\n the log"
+  "Chop up\n the log"
+  "Chop up\n the log"  -> "Make\n kindling"
+  "Make\n kindling"
+  "Make\n kindling"  -> "Make a\n fire"
+  "Buy\n matches"  -> "Make a\n fire"
+  "Make a\n fire"
+  "Go to the\n store" -> "Buy\n matches" 
+  "Go to the\n store" -> "Buy\n ingredients" 
+  "Go to the\n store" [color="springgreen"];
+  "Buy\n ingredients" [color="lightskyblue"]
+  "Buy\n matches" [color="lightskyblue"]
+  "Make a\n fire"  -> "Make\n smores!"
+  "Buy\n ingredients"  -> "Make\n smores!"
+  "Make\n smores!"
 }
 ```
