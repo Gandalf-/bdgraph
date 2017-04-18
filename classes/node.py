@@ -117,18 +117,19 @@ class Node(object):
             1 <- 4,5        # requires
             1 [options];    # options '''
 
-        left = '"' + self.pretty_desc + '"'
+        left = '"' + self.pretty_desc + ' ('+self.number+')"'
 
         # write self -> other relationships
         for node in self.provides:
-            right = '"' + node.pretty_desc + '" '
+            right = '"' + node.pretty_desc + ' (' + node.number + ')"'
+
 
             # write edges
             fd.write('  ' + left + ' -> ' + right + '\n')
 
         # write other -> self relationships
         for node in self.requires:
-            right = '"' + node.pretty_desc + '" '
+            right = '"' + node.pretty_desc + ' (' + node.number + ')"'
 
             # write edges
             fd.write('  ' + right + ' -> ' + left + '\n')

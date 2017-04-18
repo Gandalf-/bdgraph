@@ -95,16 +95,22 @@ class Graph(object):
         writes the graph to a file in graphviz dot format. nodes write
         themselves and handle their own options '''
 
+        options = [x.label for x in self.graph_options]
+
         with open(file_name, 'w') as fd:
             # header
             fd.write('digraph g{\n')
             fd.write('  rankdir=LR;\n')
             fd.write('  ratio=fill;\n')
             fd.write('  node [style=filled];\n')
+            fd.write('  overlap=false;\n')
+
+            if 'circular' in options:
+                fd.write('  layout=neato;\n')
 
             # graph contents
             for node in self.nodes:
-                node.write_dot(fd, [x.label for x in self.graph_options])
+                node.write_dot(fd, options)
 
             # footer
             fd.write('}\n')
@@ -369,7 +375,8 @@ class Graph_Option:
 
         raises SyntaxError if an invalid option is provided '''
 
-        options = ['color_complete', 'color_next', 'cleanup', 'color_urgent']
+        options = ['color_complete', 'color_next', 'cleanup', 'color_urgent',
+        'circular']
 
         if line in options:
             self.label = line
