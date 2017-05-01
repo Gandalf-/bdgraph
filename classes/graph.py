@@ -309,6 +309,17 @@ class Graph(object):
         handles non-user specified options, such as color_next and cleanup. '''
 
         options = [x.label for x in self.graph_options]
+        
+        if 'remove_marked' in options:
+            to_remove = []
+
+            # remove all marked nodes from the tree
+            for node in self.nodes:
+                if node.node_option and node.node_option.type == 'remove_marked':
+                    to_remove.append(node)
+
+            for node in to_remove:
+                self.nodes.remove(node)
 
         if 'color_next' in options:
             for node in self.nodes:
@@ -376,7 +387,7 @@ class Graph_Option:
         raises SyntaxError if an invalid option is provided '''
 
         options = ['color_complete', 'color_next', 'cleanup', 'color_urgent',
-        'circular']
+        'circular', 'remove_marked']
 
         if line in options:
             self.label = line

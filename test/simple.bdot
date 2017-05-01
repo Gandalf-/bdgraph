@@ -11,23 +11,18 @@
    7: win the lottery
    8: !buy a house
    9: buy a boat
-  10: get in boat
-  11: sail the world
-  12: sail back home
 
 options
   color_urgent
   color_complete
   color_next
+  remove_marked
   cleanup
 
 dependencies
   1 -> 2,4
   3 <- 2
-  5 <- 3,4
+  5 <- 4,3
   6 <- 5
   7 -> 8,9
   7 <- 6
-  10 -> 11
-  10 <- 9
-  12 <- 8,10
