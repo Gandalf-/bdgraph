@@ -375,8 +375,10 @@ class Graph_Option:
 
         raises SyntaxError if an invalid option is provided '''
 
-        options = ['color_complete', 'color_next', 'cleanup', 'color_urgent',
-        'circular']
+        options = [
+                'color_complete', 'color_next', 'cleanup',
+                'color_urgent', 'circular', 'publish',
+                ]
 
         if line in options:
             self.label = line

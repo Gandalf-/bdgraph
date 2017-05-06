@@ -117,7 +117,14 @@ class Node(object):
             1 <- 4,5        # requires
             1 [options];    # options '''
 
-        left = '"' + self.pretty_desc + ' ('+self.number+')"'
+        graph_option_labels = ' '.join([x.label for x in graph_options])
+
+        left = '"' + self.pretty_desc
+
+        if 'publish' not in graph_option_labels:
+            left += ' (' + self.number + ')"'
+        else:
+            left += '"'
 
         # write self -> other relationships
         for node in self.provides:
