@@ -142,7 +142,7 @@ class Node(object):
             fd.write('  ' + right + ' -> ' + left + '\n')
 
         # apply options if they're enabled at the graph level
-        if self.node_option and self.node_option.type in graph_options:
+        if self.node_option and self.node_option.type in graph_option_labels:
             left += ' ' + self.node_option.color
 
         # write node by itself

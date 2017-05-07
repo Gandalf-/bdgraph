@@ -57,12 +57,13 @@ class Graph(object):
 
             elif mode == 'options':
                 self.log('options: ' + line)
-                try:
-                    self.graph_options.append(Graph_Option(line))
+                for option in line.split(' '):
+                    try:
+                        self.graph_options.append(Graph_Option(option))
 
-                except SyntaxError:
-                    print('error: unrecongized option: ' + line)
-                    sys.exit(1)
+                    except SyntaxError:
+                        print('error: unrecongized option: ' + option)
+                        sys.exit(1)
 
             elif mode == 'dependencies':
                 self.log('dependencies: ' + line)
@@ -110,7 +111,7 @@ class Graph(object):
 
             # graph contents
             for node in self.nodes:
-                node.write_dot(fd, options)
+                node.write_dot(fd, self.graph_options)
 
             # footer
             fd.write('}\n')
@@ -136,14 +137,15 @@ class Graph(object):
 
             # options
             fd.write('options\n')
-            for option in self.graph_options:
-                fd.write('  ' + option.label + '\n')
-            fd.write('\n')
+            fd.write('  ' + ' '.join(
+                [option.label for option in self.graph_options]))
+            fd.write('\n\n')
 
             # dependencies
             fd.write('dependencies\n')
             for node in self.nodes:
                 node.write_dependencies(fd)
+
 
     def update_dependencies(self, line):
         ''' string -> none | SyntaxError, ValueError
