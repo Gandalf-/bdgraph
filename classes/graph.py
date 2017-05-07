@@ -315,13 +315,21 @@ class Graph(object):
         if 'remove_marked' in options:
             to_remove = []
 
-            # remove all marked nodes from the tree
+            # find all nodes to be deleted
             for node in self.nodes:
                 if node.node_option and node.node_option.type == 'remove_marked':
                     to_remove.append(node)
 
-            for node in to_remove:
-                self.nodes.remove(node)
+            # remove all marked nodes from the tree and other nodes
+            for node_to_remove in to_remove:
+                self.nodes.remove(node_to_remove)
+
+                for node in self.nodes:
+                    if node_to_remove in node.requires:
+                        node.requires.remove(node_to_remove)
+
+                    if node_to_remove in node.provides:
+                        node.provides.remove(node_to_remove)
 
         if 'color_next' in options:
             for node in self.nodes:
