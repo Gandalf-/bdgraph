@@ -191,7 +191,7 @@ class Node(object):
 
         flag = self.description[0]
 
-        if flag in ['@', '!', '_']:
+        if flag in ['@', '!', '_', '&']:
 
             self.log('found option: ' + flag)
             self.node_option = Node_Option(flag)
@@ -276,6 +276,11 @@ class Node_Option:
         elif flag == '!':
             self.type  = 'color_urgent'
             self.color = '[color="crimson"];'
+
+        # the '&' flag marks nodes that will be removed by graph.handle_options()
+        elif flag == '&':
+            self.type  = 'remove_marked'
+            self.color = ''
 
         # bdgraph detects which nodes are eligble for color_next, not the user,
         # so we remove the output flag

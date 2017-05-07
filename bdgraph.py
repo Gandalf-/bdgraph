@@ -34,7 +34,7 @@ def main(argv):
         output_fn = str(argv[1]) if len(argv) > 1 else input_fn + '.dot'
 
     else:
-        print('python bdgraph.py input_file [output_file]')
+        print('usage: python3 bdgraph.py input_file [output_file]')
         sys.exit(1)
 
     # read contents into list
