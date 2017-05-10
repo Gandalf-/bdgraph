@@ -12,30 +12,12 @@ Usage:
     python3 bdgraph.py input_file [output_file]
 '''
 
-import sys, os
+import sys, os, time
 from classes.graph import Graph
 
-# MAIN
-def main(argv):
-    ''' list -> none
-    handles IO '''
-
-    input_fn,output_fn = '', ''
-
-    # parse commandline arguments
-    if len(argv) > 0:
-        input_fn = str(argv[0])
-
-        if not os.path.exists(input_fn):
-            print('error: file "' + input_fn + '" does not exist')
-            sys.exit(1)
-
-        # output file name is input + .dot if not provided
-        output_fn = str(argv[1]) if len(argv) > 1 else input_fn + '.dot'
-
-    else:
-        print('usage: python3 bdgraph.py input_file [output_file]')
-        sys.exit(1)
+def run(input_fn, output_fn):
+    ''' string, string -> none
+    '''
 
     # read contents into list
     with open(input_fn, 'r') as input_fd:
@@ -54,6 +36,57 @@ def main(argv):
     options = [x.label for x in graph.graph_options]
     if 'cleanup' in options:
         graph.write_config(input_fn)
+
+    del graph
+
+# MAIN
+def main(argv):
+    ''' list -> none
+    handles IO '''
+
+    arg_counter = 0
+    monitor = False
+    input_fn, output_fn = '', ''
+
+    # parse commandline arguments
+    if len(argv) > 0:
+
+        if str(argv[arg_counter]) == '-m':
+            monitor = True
+            arg_counter += 1
+
+        input_fn = str(argv[arg_counter])
+        arg_counter += 1
+
+        if not os.path.exists(input_fn):
+            print('error: file "' + input_fn + '" does not exist')
+            sys.exit(1)
+
+        # output file name is input + .dot if not provided
+        try:
+            output_fn = str(argv[arg_counter])
+
+        except IndexError:
+            output_fn = input_fn + '.dot'
+
+    else:
+        print('usage: python3 bdgraph.py [-m] input_file [output_file]')
+        sys.exit(1)
+
+    if monitor:
+        last_change = os.stat(input_fn).st_mtime
+
+        while True:
+            current = os.stat(input_fn).st_mtime
+
+            if current != last_change:
+                run(input_fn, output_fn)
+                last_change = os.stat(input_fn).st_mtime
+
+            time.sleep(0.25)
+
+    else:
+        run(input_fn, output_fn)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

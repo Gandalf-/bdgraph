@@ -78,6 +78,10 @@ class Graph(object):
                     print('error: unrecongized node reference: ' + line)
                     sys.exit(1)
 
+    def __del__(self):
+        ''' '''
+        Node.node_counter = 1
+
     def show(self):
         ''' none -> IO
 
