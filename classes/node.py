@@ -121,7 +121,7 @@ class Node(object):
 
         left = '"' + self.pretty_desc
 
-        if 'publish' not in graph_option_labels:
+        if Option.Publish not in graph_option_labels:
             left += ' (' + self.number + ')"'
         else:
             left += '"'
@@ -129,7 +129,6 @@ class Node(object):
         # write self -> other relationships
         for node in self.provides:
             right = '"' + node.pretty_desc + ' (' + node.number + ')"'
-
 
             # write edges
             fd.write('  ' + left + ' -> ' + right + '\n')
@@ -270,23 +269,23 @@ class Node_Option:
         self.log('option: ' + flag)
 
         if flag == '@':
-            self.type  = 'color_complete'
+            self.type  = Option.Complete
             self.color = '[color="springgreen"];'
 
         elif flag == '!':
-            self.type  = 'color_urgent'
+            self.type  = Option.Urgent
             self.color = '[color="crimson"];'
 
         # the '&' flag marks nodes that will be removed by graph.handle_options()
         elif flag == '&':
-            self.type  = 'remove_marked'
+            self.type  = Option.Remove
             self.color = ''
 
         # bdgraph detects which nodes are eligble for color_next, not the user,
         # so we remove the output flag
         elif flag == '_':
             self.flag  = ''
-            self.type  = 'color_next'
+            self.type  = Option.Next
             self.color = '[color="lightskyblue"]'
 
         else:
@@ -300,3 +299,18 @@ class Node_Option:
 
         if self.logging:
             print(comment)
+
+class Option():
+
+    Complete = 'color_complete'
+    Next     = 'color_next'
+    Urgent   = 'color_urgent'
+    Cleanup  = 'cleanup'
+    Circular = 'circular'
+    Publish  = 'publish'
+    Remove   = 'remove_marked'
+
+    All_Options = [Complete, Next, Urgent, Cleanup, Circular, Publish, Remove]
+
+    def __init__(self):
+        pass

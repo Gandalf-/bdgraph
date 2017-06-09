@@ -13,9 +13,7 @@
    9: Make smores!
 
 options
-  color_next
-  color_complete
-  cleanup
+  color_next color_complete cleanup
 
 dependencies
   3 <- 1,2

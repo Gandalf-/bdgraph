@@ -13,7 +13,7 @@ Usage:
 '''
 
 import sys, copy
-from classes.node import Node, Node_Option
+from classes.node import Node, Node_Option, Option
 
 
 class Graph(object):
@@ -38,11 +38,11 @@ class Graph(object):
         for line in contents:
             # state machine, determine state and then take appropriate action
             if line == 'options':
-                mode = 'options'
+                mode = line
                 continue
 
             elif line == 'dependencies':
-                mode = 'dependencies'
+                mode = line
                 continue
 
             # actions, we know our state so do something with the line
@@ -110,7 +110,7 @@ class Graph(object):
             fd.write('  node [style=filled];\n')
             fd.write('  overlap=false;\n')
 
-            if 'circular' in options:
+            if Option.Circular in options:
                 fd.write('  layout=neato;\n')
 
             # graph contents
@@ -162,19 +162,21 @@ class Graph(object):
         unrecongized dependency type throws a SyntaxError
         unrecongized node references through AttributeError '''
 
+        left, right = 0, 1
+
         # determine dependency type
         require = line.split('<-')
         allow   = line.split('->')
 
         # 1,2,3 <- 4,5,6
         if len(require) > 1:
-            requiring_nodes = require[0].split(',')
-            providing_nodes = require[1].split(',')
+            requiring_nodes = require[left ].split(',')
+            providing_nodes = require[right].split(',')
 
         # 1,2,3 -> 4,5,6
         elif len(allow) > 1:
-            providing_nodes = allow[0].split(',')
-            requiring_nodes = allow[1].split(',')
+            providing_nodes = allow[left ].split(',')
+            requiring_nodes = allow[right].split(',')
 
         # unrecongized dependency type
         else:
@@ -184,15 +186,17 @@ class Graph(object):
         providing_nodes = [x.strip() for x in providing_nodes]
         requiring_nodes = [x.strip() for x in requiring_nodes]
 
-        # update requirements and provisions for each node
-        for r_label in requiring_nodes:
-            requiring_node = self.find_node(r_label)
+        # for each node
+        for requiring_label in requiring_nodes:
+            requiring_node = self.find_node(requiring_label)
 
-            for p_label in providing_nodes:
-                providing_node = self.find_node(p_label)
+            for providing_label in providing_nodes:
+                providing_node = self.find_node(providing_label)
 
+                # update requirements and provisions
                 requiring_node.add_require(providing_node)
                 providing_node.add_provide(requiring_node)
+
 
     def find_node(self, label):
         ''' string -> Node | ValueError
@@ -208,8 +212,9 @@ class Graph(object):
         self.log('failed to find: ' + label)
         raise ValueError
 
+
     def find_most(self, mode):
-        ''' string -> Node
+        ''' ('provide' | 'require') -> Node
 
         search through the nodes for the one that requires the most nodes or
         provides to the most nodes, depending on mode. used by
@@ -227,6 +232,7 @@ class Graph(object):
                     highest = node
 
         return highest
+
 
     def compress_representation(self):
         ''' none -> none
@@ -283,13 +289,15 @@ class Graph(object):
                     try:
                         inverse.requires.remove(copy_node)
                         copy_node.provides.remove(inverse)
-                    except ValueError: pass
+                    except ValueError:
+                        pass
 
                 # remove inverses from real graph
                 for inverse in real_node.provides:
                     try:
                         inverse.requires.remove(real_node)
-                    except ValueError: pass
+                    except ValueError:
+                        pass
 
             # the most representative relationship is a requirement
             else:
@@ -301,13 +309,15 @@ class Graph(object):
                     try:
                         inverse.provides.remove(copy_node)
                         copy_node.requires.remove(inverse)
-                    except ValueError: pass
+                    except ValueError:
+                        pass
 
                 # remove inverses from real graph
                 for inverse in real_node.requires:
                     try:
                         inverse.provides.remove(real_node)
-                    except ValueError: pass
+                    except ValueError:
+                        pass
 
     def handle_options(self):
         ''' string -> none
@@ -316,13 +326,16 @@ class Graph(object):
 
         options = [x.label for x in self.graph_options]
 
-        if 'remove_marked' in options:
+        if Option.Remove in options:
             to_remove = []
 
             # find all nodes to be deleted
             for node in self.nodes:
-                if node.node_option and node.node_option.type == 'remove_marked':
-                    to_remove.append(node)
+                try:
+                    if node.node_option.type == Option.Remove:
+                        to_remove.append(node)
+                except AttributeError:
+                    pass
 
             # remove all marked nodes from the tree and other nodes
             for node_to_remove in to_remove:
@@ -335,7 +348,7 @@ class Graph(object):
                     if node_to_remove in node.provides:
                         node.provides.remove(node_to_remove)
 
-        if 'color_next' in options:
+        if Option.Next in options:
             for node in self.nodes:
 
                 # all requiring nodes have the complete flag? this is also true
@@ -346,7 +359,7 @@ class Graph(object):
                     if not req_node.node_option:
                         requirements_satisfied = False
 
-                    elif req_node.node_option.type != 'color_complete':
+                    elif req_node.node_option.type != Option.Complete:
                         requirements_satisfied = False
 
                 if (not node.node_option) and requirements_satisfied:
@@ -365,7 +378,7 @@ class Graph(object):
         cycles are currently not supported and are detected by
         sys.getrecursionlimit() exceeding the number of nodes in the graph '''
 
-        # limit recursion depth to catch cycles in the graph
+        # limit recursion depth to catch cycles in the graph, 5 is arbitrary
         old_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(len(self.nodes) + 5)
 
@@ -400,12 +413,7 @@ class Graph_Option:
 
         raises SyntaxError if an invalid option is provided '''
 
-        options = [
-                'color_complete', 'color_next', 'cleanup', 'color_urgent',
-                'circular', 'publish', 'remove_marked',
-                ]
-
-        if line in options:
+        if line in Option.All_Options:
             self.label = line
         else:
             raise SyntaxError

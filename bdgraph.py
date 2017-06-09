@@ -17,6 +17,9 @@ from classes.graph import Graph
 
 def run(input_fn, output_fn):
     ''' string, string -> none
+
+    read in the input file, create the graph, handle user options, run graph
+    operations, and write output
     '''
 
     # read contents into list
@@ -42,7 +45,8 @@ def run(input_fn, output_fn):
 # MAIN
 def main(argv):
     ''' list -> none
-    handles IO '''
+
+    handles IO and parses user options '''
 
     arg_counter = 0
     monitor = False
@@ -76,6 +80,7 @@ def main(argv):
     if monitor:
         last_change = os.stat(input_fn).st_mtime
 
+        # poll for changes to the input file
         while True:
             current = os.stat(input_fn).st_mtime
 
