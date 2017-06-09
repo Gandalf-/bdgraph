@@ -1,0 +1,24 @@
+digraph g{
+  rankdir=LR;
+  ratio=fill;
+  node [style=filled];
+  overlap=false;
+  "Get out\n of bed (1)" -> "Find\n socks (2)"
+  "Get out\n of bed (1)" -> "Find\n shoes (4)"
+  "Get out\n of bed (1)" [color="springgreen"];
+  "Find\n socks (2)" [color="lightskyblue"]
+  "Find\n socks (2)" -> "Put on\n socks (3)"
+  "Put on\n socks (3)"
+  "Find\n shoes (4)" [color="lightskyblue"]
+  "Find\n shoes (4)" -> "Put on\n shoes (5)"
+  "Put on\n socks (3)" -> "Put on\n shoes (5)"
+  "Put on\n shoes (5)"
+  "Put on\n shoes (5)" -> "Go to\n work (6)"
+  "Go to\n work (6)"
+  "win the\n lottery (7)" -> "buy a\n house (8)"
+  "win the\n lottery (7)" -> "buy a\n boat (9)"
+  "Go to\n work (6)" -> "win the\n lottery (7)"
+  "win the\n lottery (7)"
+  "buy a\n house (8)" [color="crimson"];
+  "buy a\n boat (9)"
+}

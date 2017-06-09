@@ -1,0 +1,59 @@
+#!/usr/local/bin/bdgraph
+# 1 <- 2,3 => 1 requires 2 and 3 
+# 2 -> 3,4 => 2 provides 3 and 4 
+
+   1: @A simple SNMP authentication method for ad-hoc networks
+   2: @FireEye Target to Aggressor
+   3: @Implementation and performance analysis of SNMP on a tls tcp base
+   4: @Improving the security of SNMP in wireless networks
+   5: @Integrating public key cryptography into the (SNMP) framework
+   6: On the impact of security protocols on the performance of SNMP
+   7: @Under New Management - Practical Attacks On SNMP
+   8: RFC 5590 - Transport Subsystem for SNMP
+   9: @Securing SNMP across backbone networks
+  10: @Security issues and vuluerabilities of the SNMP protocol
+  11: Security performance analysis of SNMPv3 with respect to SNMPv2c
+  12: User-based Security Model (USM) for version 3 of the Simple Network Management Protocol (SNMPv3)
+  13: Introduction to Version 3 of the Internet-standard Network Management Framework
+  14: SNMP, SNMPv2, SNMPv3 and RMON 1 and 2
+  15: Network Management System Design of Sensor Network for Monitoring the Environment Based on a Mutual Authentication
+  16: View-based Access Control Model(VACM) for the Simple Networks Management Protocol (SNMP)
+  17: SNMPv3 - A security enhancement for SNMP
+  18: SNMPv3 - User Security Model
+  19: SNMPv3 - View Access Control Model
+  20: Transport layer security (TLS) transport model for the Simple Network Management Protocol (SNMP)
+  21: An architecture for describing Simple Network Management Protocol (SNMP) management frameworks
+  22: Coexistence between Version 1, Version 2, and Version 3 of the Internet-standard network management framework
+  23: Secure shell transport model for the Simple Network Management Protocol (SNMP)
+  24: Transport security model for the Simple Network Management Protocol (SNMP)
+  25: Simple Network Management Protocol (SNMP) over Transmission Control Protocol (TCP) transport mapping
+  26: Simple Network Management Protocol (SNMP) Context EngineID Discovery
+  27: @Survey of SNMP performance analysis studies
+  28: Security architecture for the Internet Protocol
+  29: System Security Management via SNMP
+  30: A Simple Network Management Protcol (SNMP)
+  31: Version 2 of the Protocol Operations for the Simple Network Management Protocol (SNMP)
+  32: Management Information Base (MIB) for the Simple Network Management Protocol (SNMP)
+  33: SMTP Service Extension for Secure SMTP over TLS
+  34: Vulnerabilities in SNMPv3
+  35: Cryptanalysis of the Application Secure Alternative to SNMP (APSSNMP)
+  36: Message Processing and Dispatching for Simple Network Management Protocol (SNMP)
+  37: Survey of SCADA Security Challenges and Potential Attack Vectors
+
+options
+  color_complete cleanup
+
+dependencies
+  1 <- 15,16
+  3 <- 33
+  4 <- 12,13,10
+  5 <- 16,17,18,19
+  6 <- 20,22,23,24,25,26,27
+  7 <- 35,36,37,1,4,6,8
+  9 <- 13,14,28,30
+  10 <- 17,29
+  11 <- 3,5,9
+  12 <- 21,31,32
+  14 -> 1,3,10
+  16 <- 12
+  27 <- 11

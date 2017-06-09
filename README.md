@@ -3,7 +3,7 @@ bdgraph is a tool for converting simply formatted files into handy graphviz dot 
 It's great for managing complicated projects where steps have multiple dependencies on
 each other!
 
-![Alt text](test/example1.png)
+![Alt text](test/readme.png)
 
 ## Options 
 bdgraph has several *optional* options that you can enable by adding them to the options section of your input file. Really, the whole options section is optional itself!
