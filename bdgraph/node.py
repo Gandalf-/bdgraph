@@ -12,6 +12,8 @@ Usage:
     python3 bdgraph.py input_file [output_file]
 '''
 
+import bdgraph
+
 class Node(object):
     ''' Class
 
@@ -61,7 +63,7 @@ class Node(object):
         # check for options flags
         self.parse_options()
 
-        # update node counter
+        # update global node counter
         Node.node_counter += 1
 
     def show(self):
@@ -121,7 +123,7 @@ class Node(object):
 
         left = '"' + self.pretty_desc
 
-        if Option.Publish not in graph_option_labels:
+        if bdgraph.Option.Publish not in graph_option_labels:
             left += ' (' + self.number + ')"'
         else:
             left += '"'
@@ -193,14 +195,14 @@ class Node(object):
         if flag in ['@', '!', '_', '&']:
 
             self.log('found option: ' + flag)
-            self.node_option = Node_Option(flag)
+            self.node_option = bdgraph.NodeOption(flag)
 
             # remove the flag from the descriptions
             self.description = self.description[1:]
             self.pretty_desc = self.pretty_desc[1:]
 
     def transitive_reduction(self, node, skip=False):
-        ''' Node, bool -> none | RuntimeError
+        ''' Node, bool -> none | BdgraphGraphLoopDetected
 
         skip allows us to jump over immediate children, since we don't want to
         affect their relationships. see Graph.transitive_reduction() for an
@@ -213,8 +215,12 @@ class Node(object):
                 self.requires.remove(node)
 
         # recurse
-        for child in self.provides:
-            child.transitive_reduction(node)
+        try:
+            for child in self.provides:
+                child.transitive_reduction(node)
+
+        except RuntimeError:
+            raise bdgraph.BdgraphGraphLoopDetected
 
     def log(self, comment):
         ''' string -> maybe IO
@@ -247,70 +253,3 @@ class Node(object):
             right = right + 1
 
         return word
-
-
-class Node_Option:
-    '''
-    '''
-    def __init__(self, flag, logging=False):
-        ''' string -> Node_Option | SyntaxError
-
-        handles option flag information. these add colors to nodes. flags may
-        be set by the user by appending them to the descriptions in the
-        definitions section of the graph, or generated
-
-        raises SyntaxError is an invalid option is provided '''
-
-        self.color = None       # string
-        self.type  = None       # string
-        self.flag  = flag       # char
-        self.logging = logging  # bool
-
-        self.log('option: ' + flag)
-
-        if flag == '@':
-            self.type  = Option.Complete
-            self.color = '[color="springgreen"];'
-
-        elif flag == '!':
-            self.type  = Option.Urgent
-            self.color = '[color="crimson"];'
-
-        # the '&' flag marks nodes that will be removed by graph.handle_options()
-        elif flag == '&':
-            self.type  = Option.Remove
-            self.color = ''
-
-        # bdgraph detects which nodes are eligble for color_next, not the user,
-        # so we remove the output flag
-        elif flag == '_':
-            self.flag  = ''
-            self.type  = Option.Next
-            self.color = '[color="lightskyblue"]'
-
-        else:
-            self.log('unrecongized option' + flag)
-            raise SyntaxError
-
-    def log(self, comment):
-        ''' string -> maybe IO
-
-        debugging function, only print if global `logging` is true '''
-
-        if self.logging:
-            print(comment)
-
-class Option():
-
-    Complete = 'color_complete'
-    Next     = 'color_next'
-    Urgent   = 'color_urgent'
-    Cleanup  = 'cleanup'
-    Circular = 'circular'
-    Publish  = 'publish'
-    Remove   = 'remove_marked'
-
-    All_Options = [Complete, Next, Urgent, Cleanup, Circular, Publish, Remove]
-
-    def __init__(self):
-        pass

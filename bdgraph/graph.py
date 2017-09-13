@@ -12,9 +12,9 @@ Usage:
     python3 bdgraph.py input_file [output_file]
 '''
 
-import sys, copy
-from classes.node import Node, Node_Option, Option
-
+import sys
+import copy
+import bdgraph
 
 class Graph(object):
     ''' Class
@@ -31,6 +31,7 @@ class Graph(object):
         self.contents = contents        # list of string
         self.nodes = []                 # list of Node
         self.graph_options = []         # list of Graph_Option
+        self.option_strings = []        # list of string
         self.logging = logging          # bool
 
         mode = 'definition'             # default parsing state
@@ -49,9 +50,9 @@ class Graph(object):
             if mode == 'definition':
                 self.log('definition: ' + line)
                 try:
-                    self.nodes.append(Node(line, logging=self.logging))
+                    self.nodes.append(bdgraph.Node(line, logging=self.logging))
 
-                except ValueError:
+                except bdgraph.BdgraphNodeNotFound:
                     print('error: unrecongized syntax: ' + line)
                     sys.exit(1)
 
@@ -59,9 +60,9 @@ class Graph(object):
                 self.log('options: ' + line)
                 for option in line.split(' '):
                     try:
-                        self.graph_options.append(Graph_Option(option))
+                        self.graph_options.append(bdgraph.GraphOption(option))
 
-                    except SyntaxError:
+                    except bdgraph.BdgraphSyntaxError:
                         print('error: unrecongized option: ' + option)
                         sys.exit(1)
 
@@ -70,24 +71,26 @@ class Graph(object):
                 try:
                     self.update_dependencies(line)
 
-                except SyntaxError:
+                except bdgraph.BdgraphSyntaxError:
                     print('error: unrecongized dependency type: ' + line)
                     sys.exit(1)
 
-                except ValueError:
+                except bdgraph.BdgraphNodeNotFound:
                     print('error: unrecongized node reference: ' + line)
                     sys.exit(1)
 
+        self.options = [x.label for x in self.graph_options]
+
     def __del__(self):
         ''' '''
-        Node.node_counter = 1
+        bdgraph.node.Node.node_counter = 1
 
     def show(self):
         ''' none -> IO
 
         prints a representation of the graph to the console '''
 
-        options = ' '.join([x.label for x in self.graph_options])
+        options = ' '.join(self.option_strings)
         print('graph options: ' + options)
         print()
 
@@ -100,17 +103,15 @@ class Graph(object):
         writes the graph to a file in graphviz dot format. nodes write
         themselves and handle their own options '''
 
-        options = [x.label for x in self.graph_options]
-
         with open(file_name, 'w') as fd:
             # header
-            fd.write('digraph g{\n')
-            fd.write('  rankdir=LR;\n')
-            fd.write('  ratio=fill;\n')
-            fd.write('  node [style=filled];\n')
-            fd.write('  overlap=false;\n')
+            fd.write('digraph g{\n'
+                    '  rankdir=LR;\n'
+                    '  ratio=fill;\n'
+                    '  node [style=filled];\n'
+                    '  overlap=false;\n')
 
-            if Option.Circular in options:
+            if bdgraph.Option.Circular in self.option_strings:
                 fd.write('  layout=neato;\n')
 
             # graph contents
@@ -141,8 +142,7 @@ class Graph(object):
 
             # options
             fd.write('options\n')
-            fd.write('  ' + ' '.join(
-                [option.label for option in self.graph_options]))
+            fd.write('  ' + ' '.join(self.option_strings))
             fd.write('\n\n')
 
             # dependencies
@@ -152,7 +152,7 @@ class Graph(object):
 
 
     def update_dependencies(self, line):
-        ''' string -> none | SyntaxError, ValueError
+        ''' string -> none | BdgraphSyntaxError, BdgraphNodeNotFound
 
         update the Nodes referenced in the dependency line provided.
         inputs are in the form:
@@ -180,7 +180,7 @@ class Graph(object):
 
         # unrecongized dependency type
         else:
-            raise SyntaxError
+            raise bdgraph.BdgraphSyntaxError
 
         # clean up labels
         providing_nodes = [x.strip() for x in providing_nodes]
@@ -210,7 +210,7 @@ class Graph(object):
                 return node
 
         self.log('failed to find: ' + label)
-        raise ValueError
+        raise bdgraph.BdgraphNodeNotFound
 
 
     def find_most(self, mode):
@@ -324,15 +324,13 @@ class Graph(object):
 
         handles non-user specified options, such as color_next and cleanup. '''
 
-        options = [x.label for x in self.graph_options]
-
-        if Option.Remove in options:
+        if bdgraph.Option.Remove in self.option_strings:
             to_remove = []
 
             # find all nodes to be deleted
             for node in self.nodes:
                 try:
-                    if node.node_option.type == Option.Remove:
+                    if node.node_option.type == bdgraph.Option.Remove:
                         to_remove.append(node)
                 except AttributeError:
                     pass
@@ -348,7 +346,7 @@ class Graph(object):
                     if node_to_remove in node.provides:
                         node.provides.remove(node_to_remove)
 
-        if Option.Next in options:
+        if bdgraph.Option.Next in self.option_strings:
             for node in self.nodes:
 
                 # all requiring nodes have the complete flag? this is also true
@@ -359,11 +357,11 @@ class Graph(object):
                     if not req_node.node_option:
                         requirements_satisfied = False
 
-                    elif req_node.node_option.type != Option.Complete:
+                    elif req_node.node_option.type != bdgraph.Option.Complete:
                         requirements_satisfied = False
 
                 if (not node.node_option) and requirements_satisfied:
-                    node.node_option = Node_Option('_')
+                    node.node_option = bdgraph.NodeOption('_')
 
     def transitive_reduction(self):
         ''' none -> none
@@ -388,7 +386,7 @@ class Graph(object):
                 for child in node.provides:
                     child.transitive_reduction(node, skip=True)
 
-        except RuntimeError:
+        except bdgraph.BdgraphGraphLoopDetected:
             print('warn: cycle detected, not computing transitive reductions')
 
         finally:
@@ -401,19 +399,3 @@ class Graph(object):
 
         if self.logging:
             print(comment)
-
-class Graph_Option:
-    ''' Class
-
-    Encapsulates the graph level options that are available for nodes to use.
-    For a Node_Option to be valid, it must exist at the graph level as well '''
-
-    def __init__(self, line):
-        ''' string -> Graph_Option | SyntaxError
-
-        raises SyntaxError if an invalid option is provided '''
-
-        if line in Option.All_Options:
-            self.label = line
-        else:
-            raise SyntaxError

@@ -12,8 +12,10 @@ Usage:
     python3 bdgraph.py input_file [output_file]
 '''
 
-import sys, os, time
-from classes.graph import Graph
+import sys
+import os
+import time
+import bdgraph
 
 def run(input_fn, output_fn):
     ''' string, string -> none
@@ -29,15 +31,14 @@ def run(input_fn, output_fn):
         # remove comments and blank lines
         content = [line for line in content if line and line[0] != '#']
 
-    graph = Graph(content)
+    graph = bdgraph.Graph(content)
     graph.handle_options()
     graph.transitive_reduction()
     graph.compress_representation()
     graph.write_dot(output_fn)
 
     # rewrite the input file?
-    options = [x.label for x in graph.graph_options]
-    if 'cleanup' in options:
+    if 'cleanup' in graph.option_strings:
         graph.write_config(input_fn)
 
     del graph
@@ -48,19 +49,19 @@ def main(argv):
 
     handles IO and parses user options '''
 
-    arg_counter = 0
+    argc = 0
     monitor = False
     input_fn, output_fn = '', ''
 
     # parse commandline arguments
     if len(argv) > 0:
 
-        if str(argv[arg_counter]) == '-m':
+        if str(argv[argc]) == '-m':
             monitor = True
-            arg_counter += 1
+            argc += 1
 
-        input_fn = str(argv[arg_counter])
-        arg_counter += 1
+        input_fn = str(argv[argc])
+        argc += 1
 
         if not os.path.exists(input_fn):
             print('error: file "' + input_fn + '" does not exist')
@@ -68,13 +69,13 @@ def main(argv):
 
         # output file name is input + .dot if not provided
         try:
-            output_fn = str(argv[arg_counter])
+            output_fn = str(argv[argc])
 
         except IndexError:
             output_fn = input_fn + '.dot'
 
     else:
-        print('usage: python3 bdgraph.py [-m] input_file [output_file]')
+        print('usage: bdot [-m] input_file [output_file]')
         sys.exit(1)
 
     if monitor:
