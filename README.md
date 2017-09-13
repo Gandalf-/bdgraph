@@ -33,7 +33,7 @@ used it for relating references in papers and for to-do lists. Identation and sp
 are entirely optional.
 
 ### Here's an example!
-```
+```haskell
    1: Find a fallen log
    2: Find an ax
    3: Chop up the log
@@ -42,7 +42,7 @@ are entirely optional.
    6: @Go to the store
    7: Buy ingredients
    8: Buy matches
-   9: Make smores!
+   9: Make smores
 
 options
   color_next
@@ -61,7 +61,7 @@ dependencies
 Which you can then paste or open in any dot file viewer to get the nice image
 at the top!
 
-```
+```haskell
 digraph g{
   rankdir=LR;
   ratio=fill;
@@ -85,4 +85,10 @@ digraph g{
   "Buy\n ingredients"  -> "Make\n smores!"
   "Make\n smores!"
 }
+```
+
+## That's it!
+```
+git clone https://github.com/Gandalf-/bdgraph.git
+sudo ln -s bdgraph/bdot /usr/local/bin/
 ```
