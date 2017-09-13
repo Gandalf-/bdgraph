@@ -1,20 +1,31 @@
 # bdgraph
-bdgraph is a tool for converting simply formatted files into handy graphviz dot files.
-It's great for managing complicated projects where steps have multiple dependencies on
-each other!
+
+bdgraph is a tool for converting simply formatted files into handy graphviz
+dot files.  It's great for managing complicated projects where steps have
+multiple dependencies on each other!
 
 ![Alt text](test/readme.png)
 
 ## Options 
-bdgraph has several *optional* options that you can enable by adding them to the options section of your input file. Really, the whole options section is optional itself!
-- **color_complete**: highlight nodes marked with '@' in gren
-- **color_urgent**: highlight nodes marked with '!' in red
-- **color_next**: highlight nodes that don't have any unmet dependencies in blue
-- **cleanup**: tells bdgraph to reorganize your input file. It'll reorder the node
-  labels so they're in order, but maintain the node values themselves and your extra
-  line breaks so you can keep nodes grouped together.
+
+bdgraph has several *optional* options that you can enable by adding them to
+the options section of your input file. Really, the whole options section is
+optional itself! If the option has a symbol, you enable it for one node at a
+time; see `6:` in the example below.
+
+| Option         | Symbol   | Effect                                                              |
+| ------         | :------: | ----                                                                |
+| color_complete | @        | highlight nodes in green                                            |
+| color_urgent   | !        | highlight nodes in red                                              |
+| remove_marked  | &        | safely delete this node                                             |
+| color_next     |          | auto highlight nodes that don't have any unmet dependencies in blue |
+| cleanup        |          | tells bdgraph to reorganize your input file                         |
+| circular       |          | generate a more circular output graph                               |
+| publish        |          | remove node count from output graph                                 |
+
 
 ## Dependencies
+
 The dependencies section tells bdgraph how your information is related. It uses a simple
 syntax in which '1 -> 2' means '2' relies on '1'. What this means is up to you! I've
 used it for relating references in papers and for to-do lists. Identation and spacing
@@ -45,7 +56,10 @@ dependencies
   9 <- 5,7
 ```
 ### bdgraph uses this to generate the following:
-Which you can then paste or open in any dot file viewer to get the nice image at the top!
+
+Which you can then paste or open in any dot file viewer to get the nice image
+at the top!
+
 ```
 digraph g{
   rankdir=LR;
