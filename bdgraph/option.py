@@ -9,8 +9,10 @@ class Option():
     Circular = 'circular'
     Publish  = 'publish'
     Remove   = 'remove_marked'
+    NoReduce = 'no_reduce'
 
-    options = [Complete, Next, Urgent, Cleanup, Circular, Publish, Remove]
+    options = \
+        [Complete, Next, Urgent, Cleanup, Circular, Publish, Remove, NoReduce]
 
     def __init__(self):
         pass

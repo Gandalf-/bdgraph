@@ -376,6 +376,9 @@ class Graph(object):
         cycles are currently not supported and are detected by
         sys.getrecursionlimit() exceeding the number of nodes in the graph '''
 
+        if bdgraph.Option.NoReduce in self.option_strings:
+            return
+
         # limit recursion depth to catch cycles in the graph, 5 is arbitrary
         old_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(len(self.nodes) + 5)

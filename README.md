@@ -22,6 +22,7 @@ time; see `6:` in the example below.
 | cleanup        |          | tells bdgraph to reorganize your input file                         |
 | circular       |          | generate a more circular output graph                               |
 | publish        |          | remove node count from output graph                                 |
+| no_reduce      |          | do not apply transitive reduction algorithm                         |
 
 
 ## Dependencies
