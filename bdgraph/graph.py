@@ -16,6 +16,7 @@ import sys
 import copy
 import bdgraph
 
+
 class Graph(object):
     ''' Class
 
@@ -106,10 +107,10 @@ class Graph(object):
         with open(file_name, 'w') as fd:
             # header
             fd.write('digraph g{\n'
-                    '  rankdir=LR;\n'
-                    '  ratio=fill;\n'
-                    '  node [style=filled];\n'
-                    '  overlap=false;\n')
+                     '  rankdir=LR;\n'
+                     '  ratio=fill;\n'
+                     '  node [style=filled];\n'
+                     '  overlap=false;\n')
 
             if bdgraph.Option.Circular in self.option_strings:
                 fd.write('  layout=neato;\n')
@@ -150,7 +151,6 @@ class Graph(object):
             for node in self.nodes:
                 node.write_dependencies(fd)
 
-
     def update_dependencies(self, line):
         ''' string -> none | BdgraphSyntaxError, BdgraphNodeNotFound
 
@@ -166,16 +166,16 @@ class Graph(object):
 
         # determine dependency type
         require = line.split('<-')
-        allow   = line.split('->')
+        allow = line.split('->')
 
         # 1,2,3 <- 4,5,6
         if len(require) > 1:
-            requiring_nodes = require[left ].split(',')
+            requiring_nodes = require[left].split(',')
             providing_nodes = require[right].split(',')
 
         # 1,2,3 -> 4,5,6
         elif len(allow) > 1:
-            providing_nodes = allow[left ].split(',')
+            providing_nodes = allow[left].split(',')
             requiring_nodes = allow[right].split(',')
 
         # unrecongized dependency type
@@ -197,7 +197,6 @@ class Graph(object):
                 requiring_node.add_require(providing_node)
                 providing_node.add_provide(requiring_node)
 
-
     def find_node(self, label):
         ''' string -> Node | ValueError
 
@@ -211,7 +210,6 @@ class Graph(object):
 
         self.log('failed to find: ' + label)
         raise bdgraph.BdgraphNodeNotFound
-
 
     def find_most(self, mode):
         ''' ('provide' | 'require') -> Node
@@ -232,7 +230,6 @@ class Graph(object):
                     highest = node
 
         return highest
-
 
     def compress_representation(self):
         ''' none -> none

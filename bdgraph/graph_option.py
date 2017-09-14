@@ -2,6 +2,7 @@
 
 import bdgraph
 
+
 class GraphOption:
     ''' Class
 

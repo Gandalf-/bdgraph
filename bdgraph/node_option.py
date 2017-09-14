@@ -2,9 +2,11 @@
 
 import bdgraph
 
+
 class NodeOption:
     '''
     '''
+
     def __init__(self, flag, logging=False):
         ''' string -> NodeOption | BdgraphSyntaxError
 
@@ -15,30 +17,30 @@ class NodeOption:
         raises SyntaxError is an invalid option is provided '''
 
         self.color = None       # string
-        self.type  = None       # string
-        self.flag  = flag       # char
+        self.type = None        # string
+        self.flag = flag        # char
         self.logging = logging  # bool
 
         self.log('option: ' + flag)
 
         if flag == '@':
-            self.type  = bdgraph.Option.Complete
+            self.type = bdgraph.Option.Complete
             self.color = '[color="springgreen"];'
 
         elif flag == '!':
-            self.type  = bdgraph.Option.Urgent
+            self.type = bdgraph.Option.Urgent
             self.color = '[color="crimson"];'
 
-        # the '&' flag marks nodes that will be removed by graph.handle_options()
+        # '&' marks nodes that will be removed by graph.handle_options()
         elif flag == '&':
-            self.type  = bdgraph.Option.Remove
+            self.type = bdgraph.Option.Remove
             self.color = ''
 
         # bdgraph detects which nodes are eligble for color_next, not the user,
         # so we remove the output flag
         elif flag == '_':
-            self.flag  = ''
-            self.type  = bdgraph.Option.Next
+            self.flag = ''
+            self.type = bdgraph.Option.Next
             self.color = '[color="lightskyblue"]'
 
         else:

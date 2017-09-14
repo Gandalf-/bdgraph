@@ -14,6 +14,7 @@ Usage:
 
 import bdgraph
 
+
 class Node(object):
     ''' Class
 
@@ -52,13 +53,13 @@ class Node(object):
         if desc_len < 50:
             # break in half
             self.pretty_desc = self.split_on_nearest_space(
-                    self.description, desc_len // 2)
+                self.description, desc_len // 2)
         else:
             # break in thirds
             self.pretty_desc = self.split_on_nearest_space(
-                    self.description, desc_len // 3)
+                self.description, desc_len // 3)
             self.pretty_desc = self.split_on_nearest_space(
-                    self.pretty_desc, 2 * (desc_len // 3))
+                self.pretty_desc, 2 * (desc_len // 3))
 
         # check for options flags
         self.parse_options()
@@ -179,16 +180,16 @@ class Node(object):
 
         if self.provides:
             fd.write('  %s -> %s\n' %
-                    (self.number, ','.join([x.number for x in self.provides])))
+                     (self.number, ','.join([x.number for x in self.provides])))
 
         if self.requires:
             fd.write('  %s <- %s\n' %
-                    (self.number, ','.join([x.number for x in self.requires])))
+                     (self.number, ','.join([x.number for x in self.requires])))
 
     def parse_options(self):
         ''' none -> none
-        checks the node's label for an option flag. if they exist, they're saved
-        and the flag is removed from the label '''
+        checks the node's label for an option flag. if they exist, they're
+        saved and the flag is removed from the label '''
 
         flag = self.description[0]
 

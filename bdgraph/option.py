@@ -1,14 +1,15 @@
 #!/usr/bin/python3
 
+
 class Option():
 
     Complete = 'color_complete'
-    Next     = 'color_next'
-    Urgent   = 'color_urgent'
-    Cleanup  = 'cleanup'
+    Next = 'color_next'
+    Urgent = 'color_urgent'
+    Cleanup = 'cleanup'
     Circular = 'circular'
-    Publish  = 'publish'
-    Remove   = 'remove_marked'
+    Publish = 'publish'
+    Remove = 'remove_marked'
     NoReduce = 'no_reduce'
 
     options = \
