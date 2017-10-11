@@ -180,11 +180,13 @@ class Node(object):
 
         if self.provides:
             fd.write('  %s -> %s\n' %
-                     (self.number, ','.join([x.number for x in self.provides])))
+                     (self.number, ','.join(
+                         [x.number for x in self.provides])))
 
         if self.requires:
             fd.write('  %s <- %s\n' %
-                     (self.number, ','.join([x.number for x in self.requires])))
+                     (self.number, ','.join(
+                         [x.number for x in self.requires])))
 
     def parse_options(self):
         ''' none -> none
@@ -238,8 +240,8 @@ class Node(object):
         ''' string, int -> string
 
         searches left and right of the start point for a space and inserts a
-        newline character there. this is useful when writing the dot file so that
-        the bubbles aren't stretched out by long descriptions '''
+        newline character there. this is useful when writing the dot file so
+        that the bubbles aren't stretched out by long descriptions '''
 
         right = left = start
 
