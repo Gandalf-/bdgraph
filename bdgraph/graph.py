@@ -24,10 +24,14 @@ class Graph(object):
     representation, and handles parsing options, and writing output files '''
 
     def __init__(self, contents, logging=False):
-        ''' list of strings, bool -> Graph
+        ''' string, bool -> Graph
 
         construct a Graph object, handles parsing the input file to create
         internal representation and options list '''
+
+        # clean input, convert to list of lines, remove comments
+        contents = [line.strip() for line in contents.split('\n')]
+        contents = [line for line in contents if line and line[0] != '#']
 
         self.contents = contents        # list of string
         self.nodes = []                 # list of Node
@@ -54,8 +58,8 @@ class Graph(object):
                     self.nodes.append(bdgraph.Node(line, logging=self.logging))
 
                 except bdgraph.BdgraphNodeNotFound:
-                    print('error: unrecongized syntax: ' + line)
-                    sys.exit(1)
+                    raise bdgraph.BdgraphRuntimeError(
+                        'error: unrecongized syntax: ' + line)
 
             elif mode == 'options':
                 self.log('options: ' + line)
@@ -64,8 +68,8 @@ class Graph(object):
                         self.graph_options.append(bdgraph.GraphOption(option))
 
                     except bdgraph.BdgraphSyntaxError:
-                        print('error: unrecongized option: ' + option)
-                        sys.exit(1)
+                        raise bdgraph.BdgraphRuntimeError(
+                            'error: unrecongized option: ' + option)
 
             elif mode == 'dependencies':
                 self.log('dependencies: ' + line)
@@ -73,12 +77,12 @@ class Graph(object):
                     self.update_dependencies(line)
 
                 except bdgraph.BdgraphSyntaxError:
-                    print('error: unrecongized dependency type: ' + line)
-                    sys.exit(1)
+                    raise bdgraph.BdgraphRuntimeError(
+                        'error: unrecongized dependency type: ' + line)
 
                 except bdgraph.BdgraphNodeNotFound:
-                    print('error: unrecongized node reference: ' + line)
-                    sys.exit(1)
+                    raise bdgraph.BdgraphRuntimeError(
+                        'error: unrecongized node reference: ' + line)
 
         self.options = [x.label for x in self.graph_options]
 
@@ -198,7 +202,7 @@ class Graph(object):
                 providing_node.add_provide(requiring_node)
 
     def find_node(self, label):
-        ''' string -> Node | ValueError
+        ''' string -> Node | BdgraphNodeNotFound
 
         search through the graph's nodes for the node with the same label as
         the one provided '''

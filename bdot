@@ -27,16 +27,18 @@ def run(input_fn, output_fn):
 
     # read contents into list
     with open(input_fn, 'r') as input_fd:
-        content = [line.strip() for line in input_fd.readlines()]
+        content = input_fd.readlines()
 
-        # remove comments and blank lines
-        content = [line for line in content if line and line[0] != '#']
+    try:
+        graph = bdgraph.Graph(content)
+        graph.handle_options()
+        graph.transitive_reduction()
+        graph.compress_representation()
+        graph.write_dot(output_fn)
 
-    graph = bdgraph.Graph(content)
-    graph.handle_options()
-    graph.transitive_reduction()
-    graph.compress_representation()
-    graph.write_dot(output_fn)
+    except bdgraph.BdgraphRuntimeError as error:
+        print(str(error))
+        sys.exit(1)
 
     # rewrite the input file?
     if 'cleanup' in graph.option_strings:

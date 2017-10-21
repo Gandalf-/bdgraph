@@ -9,3 +9,7 @@ class BdgraphGraphLoopDetected(Exception):
 
 class BdgraphNodeNotFound(Exception):
     pass
+
+
+class BdgraphRuntimeError(Exception):
+    pass

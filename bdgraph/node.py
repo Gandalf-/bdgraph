@@ -46,7 +46,13 @@ class Node(object):
         self.logging = logging      # bool
 
         self.number = str(Node.node_counter)
-        self.label, self.description = [x.strip() for x in label.split(':')]
+        try:
+            self.label, self.description = \
+                [x.strip() for x in label.split(':')]
+
+        except ValueError:
+            raise bdgraph.BdgraphSyntaxError(
+                'unable to unpack ' + label)
 
         # break up description to multiple lines
         desc_len = len(self.description)
