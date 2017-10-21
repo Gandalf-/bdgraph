@@ -12,9 +12,10 @@ Usage:
     python3 bdgraph.py input_file [output_file]
 '''
 
-import sys
-import copy
 import bdgraph
+import copy
+import inspect
+import sys
 
 
 class Graph(object):
@@ -38,6 +39,7 @@ class Graph(object):
         self.graph_options = []         # list of Graph_Option
         self.option_strings = []        # list of string
         self.logging = logging          # bool
+        self.has_cycle = False          # bool
 
         mode = 'definition'             # default parsing state
 
@@ -84,7 +86,7 @@ class Graph(object):
                     raise bdgraph.BdgraphRuntimeError(
                         'error: unrecongized node reference: ' + line)
 
-        self.options = [x.label for x in self.graph_options]
+        self.options = [_.label for _ in self.graph_options]
 
     def __del__(self):
         ''' '''
@@ -187,8 +189,8 @@ class Graph(object):
             raise bdgraph.BdgraphSyntaxError
 
         # clean up labels
-        providing_nodes = [x.strip() for x in providing_nodes]
-        requiring_nodes = [x.strip() for x in requiring_nodes]
+        providing_nodes = [_.strip() for _ in providing_nodes]
+        requiring_nodes = [_.strip() for _ in requiring_nodes]
 
         # for each node
         for requiring_label in requiring_nodes:
@@ -205,7 +207,8 @@ class Graph(object):
         ''' string -> Node | BdgraphNodeNotFound
 
         search through the graph's nodes for the node with the same label as
-        the one provided '''
+        the one provided. searches by label, not description
+        '''
 
         for node in self.nodes:
             if node.label == label:
@@ -215,21 +218,22 @@ class Graph(object):
         self.log('failed to find: ' + label)
         raise bdgraph.BdgraphNodeNotFound
 
-    def find_most(self, mode):
+    def find_most(self, provide=False, require=False):
         ''' ('provide' | 'require') -> Node
 
         search through the nodes for the one that requires the most nodes or
         provides to the most nodes, depending on mode. used by
-        Graph.compress_representation() '''
+        Graph.compress_representation()
+        '''
 
         highest = self.nodes[0]
 
         for node in self.nodes:
-            if mode == 'provide':
+            if provide:
                 if len(node.provides) > len(highest.provides):
                     highest = node
 
-            elif mode == 'require':
+            elif require:
                 if len(node.requires) > len(highest.requires):
                     highest = node
 
@@ -269,8 +273,8 @@ class Graph(object):
         graph_copy = copy.deepcopy(self)
 
         while True:
-            most_provide = graph_copy.find_most('provide')
-            most_require = graph_copy.find_most('require')
+            most_provide = graph_copy.find_most(provide=True)
+            most_require = graph_copy.find_most(require=True)
 
             num_provides = len(most_provide.provides)
             num_requires = len(most_require.requires)
@@ -380,9 +384,10 @@ class Graph(object):
         if bdgraph.Option.NoReduce in self.option_strings:
             return
 
-        # limit recursion depth to catch cycles in the graph, 5 is arbitrary
+        # limit recursion depth to catch cycles in the graph, 10 is a buffer
         old_limit = sys.getrecursionlimit()
-        sys.setrecursionlimit(len(self.nodes) + 5)
+        current_level = len(inspect.getouterframes(inspect.currentframe(1)))
+        sys.setrecursionlimit(len(self.nodes) + current_level + 10)
 
         try:
             # apply the transitive_reduction algorithm to every node
@@ -391,7 +396,7 @@ class Graph(object):
                     child.transitive_reduction(node, skip=True)
 
         except bdgraph.BdgraphGraphLoopDetected:
-            print('warn: cycle detected, not computing transitive reductions')
+            self.has_cycle = True
 
         finally:
             sys.setrecursionlimit(old_limit)

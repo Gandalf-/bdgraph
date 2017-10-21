@@ -7,6 +7,8 @@ class NodeOption:
     '''
     '''
 
+    flags = ['@', '!', '_', '&']
+
     def __init__(self, flag, logging=False):
         ''' string -> NodeOption | BdgraphSyntaxError
 

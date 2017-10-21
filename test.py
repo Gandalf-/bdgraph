@@ -3,7 +3,7 @@
 import unittest
 from bdgraph import Node, NodeOption
 from bdgraph import Graph, GraphOption
-from bdgraph import BdgraphRuntimeError
+from bdgraph import BdgraphRuntimeError, BdgraphNodeNotFound
 
 template = '''
 {h}
@@ -25,13 +25,59 @@ dependencies
 '''
 
 
+def read_graph(filename):
+    ''' string -> string
+    '''
+    filename = 'bdgraph/test/sources/' + filename
+
+    with open(filename, 'r') as input_fd:
+        return input_fd.read()
+
+
+class TestRegression(unittest.TestCase):
+    ''' no errors on graphs that used to work '''
+
+    def test_references(self):
+        contents = read_graph('references.bdot')
+        graph = Graph(contents)
+        self.assertIsNotNone(graph)
+
+        graph.handle_options()
+        graph.transitive_reduction()
+        graph.compress_representation()
+
+    def test_example(self):
+        contents = read_graph('example.bdot')
+        graph = Graph(contents)
+        self.assertIsNotNone(graph)
+
+        graph.handle_options()
+        graph.transitive_reduction()
+        graph.compress_representation()
+
+    def test_simple(self):
+        contents = read_graph('simple.bdot')
+        graph = Graph(contents)
+        self.assertIsNotNone(graph)
+
+        graph.handle_options()
+        graph.transitive_reduction()
+        graph.compress_representation()
+
+
 class TestGraph(unittest.TestCase):
     ''' graph '''
 
     def test_simple_graph(self):
+        ''' check if our sanity is intact '''
         Graph(simple)
 
+    def test_complex_graph(self):
+        contents = read_graph('references.bdot')
+        self.assertIsNotNone(Graph(contents))
+
     def test_invalid_dependency(self):
+        ''' dependency states 1 <- 2, but 2 doesn't exist '''
         graph = template.format(h='1: apple', d='1 <- 2', o='')
 
         with self.assertRaises(BdgraphRuntimeError):
@@ -42,11 +88,20 @@ class TestGraph(unittest.TestCase):
         Graph('')
 
     def test_find_node(self):
+        ''' search for the node with label == 1 '''
         graph = Graph(simple)
-        graph.show()
         self.assertIsNotNone(graph.find_node('1'))
 
+    def test_find_node_invalid(self):
+        ''' search for a node that doesn't exist '''
+        graph = Graph(simple)
+        with self.assertRaises(BdgraphNodeNotFound):
+            graph.find_node('5')
+
     def test_find_most(self):
+        pass
+
+    def test_find_most_invalid(self):
         pass
 
     def test_compress_representation(self):
@@ -125,6 +180,9 @@ class TestNodeOption(unittest.TestCase):
 
     def test_valid_remove(self):
         NodeOption('&')
+
+    def test_valid_next(self):
+        NodeOption('_')
 
     def test_invalid_option(self):
         with self.assertRaises(Exception):

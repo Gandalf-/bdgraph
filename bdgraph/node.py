@@ -48,7 +48,7 @@ class Node(object):
         self.number = str(Node.node_counter)
         try:
             self.label, self.description = \
-                [x.strip() for x in label.split(':')]
+                [_.strip() for _ in label.split(':')]
 
         except ValueError:
             raise bdgraph.BdgraphSyntaxError(
@@ -83,9 +83,9 @@ class Node(object):
             print('option: ' + self.node_option.type)
 
         if self.provides:
-            print('-> ' + ' '.join([x.number for x in self.provides]))
+            print('-> ' + ' '.join([_.number for _ in self.provides]))
         if self.requires:
-            print('<- ' + ' '.join([x.number for x in self.requires]))
+            print('<- ' + ' '.join([_.number for _ in self.requires]))
 
         print()
 
@@ -126,7 +126,7 @@ class Node(object):
             1 <- 4,5        # requires
             1 [options];    # options '''
 
-        graph_option_labels = ' '.join([x.label for x in graph_options])
+        graph_option_labels = ' '.join([_.label for _ in graph_options])
 
         left = '"' + self.pretty_desc
 
@@ -187,12 +187,12 @@ class Node(object):
         if self.provides:
             fd.write('  %s -> %s\n' %
                      (self.number, ','.join(
-                         [x.number for x in self.provides])))
+                         [_.number for _ in self.provides])))
 
         if self.requires:
             fd.write('  %s <- %s\n' %
                      (self.number, ','.join(
-                         [x.number for x in self.requires])))
+                         [_.number for _ in self.requires])))
 
     def parse_options(self):
         ''' none -> none
@@ -201,7 +201,7 @@ class Node(object):
 
         flag = self.description[0]
 
-        if flag in ['@', '!', '_', '&']:
+        if flag in bdgraph.NodeOption.flags:
 
             self.log('found option: ' + flag)
             self.node_option = bdgraph.NodeOption(flag)

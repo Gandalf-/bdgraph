@@ -27,12 +27,16 @@ def run(input_fn, output_fn):
 
     # read contents into list
     with open(input_fn, 'r') as input_fd:
-        content = input_fd.readlines()
+        content = input_fd.read()
 
     try:
         graph = bdgraph.Graph(content)
         graph.handle_options()
         graph.transitive_reduction()
+
+        if graph.has_cycle:
+            print('warn: cycle detected, not computing transitive reductions')
+
         graph.compress_representation()
         graph.write_dot(output_fn)
 
