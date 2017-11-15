@@ -4,7 +4,7 @@ bdgraph is a tool for converting simply formatted files into handy graphviz
 dot files.  It's great for managing complicated projects where steps have
 multiple dependencies on each other!
 
-![Alt text](test/readme.png)
+![Alt text](bdgraph/test/readme.png)
 
 ## Options 
 
