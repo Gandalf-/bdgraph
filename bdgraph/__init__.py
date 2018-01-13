@@ -1,3 +1,6 @@
+'''
+bdgraph
+'''
 from bdgraph.exceptions import BdgraphSyntaxError
 from bdgraph.exceptions import BdgraphGraphLoopDetected
 from bdgraph.exceptions import BdgraphNodeNotFound

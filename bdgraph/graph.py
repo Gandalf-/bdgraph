@@ -210,13 +210,16 @@ class Graph(object):
         the one provided. searches by label, not description
         '''
 
-        for node in self.nodes:
-            if node.label == label:
-                self.log('found: ' + label)
-                return node
+        result = [node for node in self.nodes if node.label == label]
 
-        self.log('failed to find: ' + label)
-        raise bdgraph.BdgraphNodeNotFound
+        if not result:
+          self.log('failed to find: ' + label)
+          raise bdgraph.BdgraphNodeNotFound
+
+        else:
+          self.log('found: ' + label)
+          return result.pop()
+
 
     def find_most(self, provide=False, require=False):
         ''' ('provide' | 'require') -> Node
@@ -229,13 +232,11 @@ class Graph(object):
         highest = self.nodes[0]
 
         for node in self.nodes:
-            if provide:
-                if len(node.provides) > len(highest.provides):
-                    highest = node
+            if provide and len(node.provides) > len(highest.provides):
+                highest = node
 
-            elif require:
-                if len(node.requires) > len(highest.requires):
-                    highest = node
+            elif require and len(node.requires) > len(highest.requires):
+                highest = node
 
         return highest
 
@@ -386,8 +387,8 @@ class Graph(object):
 
         # limit recursion depth to catch cycles in the graph, 10 is a buffer
         old_limit = sys.getrecursionlimit()
-        current_level = len(inspect.getouterframes(inspect.currentframe(1)))
-        sys.setrecursionlimit(len(self.nodes) + current_level + 10)
+        current_level = len(inspect.getouterframes(inspect.currentframe()))
+        sys.setrecursionlimit(len(self.nodes) + current_level + 20)
 
         try:
             # apply the transitive_reduction algorithm to every node
