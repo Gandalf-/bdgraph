@@ -57,7 +57,7 @@ class Graph(object):
             if mode == 'definition':
                 self.log('definition: ' + line)
                 try:
-                    self.nodes.append(bdgraph.Node(line, logging=self.logging))
+                    self.nodes += [bdgraph.Node(line, logging=self.logging)]
 
                 except bdgraph.BdgraphNodeNotFound:
                     raise bdgraph.BdgraphRuntimeError(
@@ -67,7 +67,7 @@ class Graph(object):
                 self.log('options: ' + line)
                 for option in line.split(' '):
                     try:
-                        self.graph_options.append(bdgraph.GraphOption(option))
+                        self.graph_options += [bdgraph.GraphOption(option)]
 
                     except bdgraph.BdgraphSyntaxError:
                         raise bdgraph.BdgraphRuntimeError(
@@ -107,6 +107,8 @@ class Graph(object):
     def write_dot(self, file_name):
         ''' string -> IO
 
+        @file_name  name of the output graphviz file to write
+
         writes the graph to a file in graphviz dot format. nodes write
         themselves and handle their own options '''
 
@@ -130,6 +132,8 @@ class Graph(object):
 
     def write_config(self, file_name):
         ''' string -> IO
+
+        @file_name  name of the output bdgraph to write
 
         rewrites the input file. this reformats definitions, options, and
         dependencies. it's also run after the Graph.compress_representation()
@@ -159,6 +163,8 @@ class Graph(object):
 
     def update_dependencies(self, line):
         ''' string -> none | BdgraphSyntaxError, BdgraphNodeNotFound
+
+        @line   input line from file with node dependency information
 
         update the Nodes referenced in the dependency line provided.
         inputs are in the form:
@@ -206,28 +212,27 @@ class Graph(object):
     def find_node(self, label):
         ''' string -> Node | BdgraphNodeNotFound
 
+        @label  Node.label of the node to find
+
         search through the graph's nodes for the node with the same label as
-        the one provided. searches by label, not description
-        '''
+        the one provided. searches by label, not description '''
 
         result = [node for node in self.nodes if node.label == label]
 
         if not result:
-          self.log('failed to find: ' + label)
-          raise bdgraph.BdgraphNodeNotFound
+            self.log('failed to find: ' + label)
+            raise bdgraph.BdgraphNodeNotFound
 
         else:
-          self.log('found: ' + label)
-          return result.pop()
-
+            self.log('found: ' + label)
+            return result.pop()
 
     def find_most(self, provide=False, require=False):
         ''' ('provide' | 'require') -> Node
 
         search through the nodes for the one that requires the most nodes or
         provides to the most nodes, depending on mode. used by
-        Graph.compress_representation()
-        '''
+        Graph.compress_representation() '''
 
         highest = self.nodes[0]
 
@@ -242,6 +247,7 @@ class Graph(object):
 
     def compress_representation(self):
         ''' none -> none
+
         analyzes relationships between nodes to find an equivalent graph of
         minimum size (# edges)
 
@@ -326,7 +332,7 @@ class Graph(object):
                         pass
 
     def handle_options(self):
-        ''' string -> none
+        ''' none -> none
 
         handles non-user specified options, such as color_next and cleanup. '''
 
@@ -404,6 +410,8 @@ class Graph(object):
 
     def log(self, comment):
         ''' string -> maybe IO
+
+        @comment    message to write to the console
 
         debugging function, only print if global `logging` is true '''
 

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 ''' bdgraph.py
 
 Author:
@@ -9,21 +10,22 @@ Description:
     options, and writes a corresponding output graphviz dot file
 
 Usage:
-    python3 bdgraph.py input_file [output_file]
-'''
+    python3 bdgraph.py input_file [output_file] '''
 
-import sys
-import os
-import time
 import bdgraph
+import os
+import sys
+import time
 
 
 def run(input_fn, output_fn):
     ''' string, string -> none
 
+    @input_fn   input bdgraph file to parse
+    @output_fn  file to write graphviz output to
+
     read in the input file, create the graph, handle user options, run graph
-    operations, and write output
-    '''
+    operations, and write output '''
 
     # read contents into list
     with open(input_fn, 'r') as input_fd:
@@ -52,7 +54,7 @@ def run(input_fn, output_fn):
 
 
 def main(argv):
-    ''' list -> none
+    ''' list of string -> none
 
     handles IO and parses user options '''
 

@@ -137,17 +137,17 @@ class Node(object):
 
         # write self -> other relationships
         for node in self.provides:
-            right = '"' + node.pretty_desc + ' (' + node.number + ')"'
+            right = '"%s (%s)"' % (node.pretty_desc, node.number)
 
             # write edges
-            fd.write('  ' + left + ' -> ' + right + '\n')
+            fd.write('  %s -> %s\n' % (left, right))
 
         # write other -> self relationships
         for node in self.requires:
-            right = '"' + node.pretty_desc + ' (' + node.number + ')"'
+            right = '"%s (%s)"' % (node.pretty_desc, node.number)
 
             # write edges
-            fd.write('  ' + right + ' -> ' + left + '\n')
+            fd.write('  %s -> %s\n' % (right, left))
 
         # apply options if they're enabled at the graph level
         if self.node_option and self.node_option.type in graph_option_labels:
