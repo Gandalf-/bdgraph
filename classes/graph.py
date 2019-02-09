@@ -367,7 +367,7 @@ class Graph(object):
 
         # limit recursion depth to catch cycles in the graph
         old_limit = sys.getrecursionlimit()
-        sys.setrecursionlimit(len(self.nodes) + 5)
+        sys.setrecursionlimit(max(len(self.nodes) + 5, 20))
 
         try:
             # apply the transitive_reduction algorithm to every node

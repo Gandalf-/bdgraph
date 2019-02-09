@@ -275,7 +275,7 @@ class Node_Option:
 
         elif flag == '!':
             self.type  = 'color_urgent'
-            self.color = '[color="crimson"];'
+            self.color = '[color="yellow"];'
 
         # the '&' flag marks nodes that will be removed by graph.handle_options()
         elif flag == '&':
